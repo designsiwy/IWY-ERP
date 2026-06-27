@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers - IWY Designs ERP</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div id="nav-container"></div>
+  <div class="main-content">
+    <div id="topbar-container"></div>
+    <div class="page-content">
+
+      <div class="page-header">
+        <div>
+          <h1>Customer Management</h1>
+          <p>Manage your client database</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline" onclick="exportCustomers()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Export CSV
+          </button>
+          <button class="btn btn-gold" onclick="openAddCustomer()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Customer
+          </button>
+        </div>
+      </div>
+
+      <!-- SEARCH BAR -->
+      <div class="filter-bar">
+        <div class="topbar-search" style="flex:1;max-width:400px;">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" id="search-input" placeholder="Search customers by name, company, phone..." oninput="filterCustomers(this.value)">
+        </div>
+        <select id="city-filter" onchange="filterCustomers(document.getElementById('search-input').value)" style="width:160px;">
+          <option value="">All Cities</option>
+        </select>
+        <span id="result-count" style="font-size:12px;color:var(--text-light);white-space:nowrap;"></span>
+      </div>
+
+      <!-- CUSTOMERS TABLE -->
+      <div class="card">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Customer Name</th>
+                <th>Company</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>City</th>
+                <th>GST</th>
+                <th>Quotations</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customers-tbody">
+              <tr><td colspan="9"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:12px 16px;border-top:1px solid var(--border);">
+          <div id="pagination" class="pagination"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT CUSTOMER MODAL -->
+<div class="modal-overlay" id="customer-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 id="customer-modal-title">Add Customer</h2>
+      <button class="modal-close" onclick="UTILS.closeModal('customer-modal')">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="customer-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Customer Name <span class="req">*</span></label>
+          <input type="text" id="c-name" placeholder="Full name">
+        </div>
+        <div class="form-group">
+          <label>Company Name</label>
+          <input type="text" id="c-company" placeholder="Company / Firm name">
+        </div>
+        <div class="form-group">
+          <label>Phone <span class="req">*</span></label>
+          <input type="tel" id="c-phone" placeholder="+91-XXXXXXXXXX">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="c-email" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label>GST Number</label>
+          <input type="text" id="c-gst" placeholder="GSTIN" style="text-transform:uppercase;">
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" id="c-city" placeholder="City">
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" id="c-state" placeholder="State">
+        </div>
+        <div class="form-group">
+          <label>Pincode</label>
+          <input type="text" id="c-pincode" placeholder="Pincode">
+        </div>
+        <div class="form-group full-width">
+          <label>Address</label>
+          <textarea id="c-address" placeholder="Full address" rows="2"></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label>Notes</label>
+          <textarea id="c-notes" placeholder="Internal notes about this customer" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UTILS.closeModal('customer-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveCustomer()">Save Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW CUSTOMER MODAL -->
+<div class="modal-overlay" id="view-customer-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 id="view-customer-name">Customer Details</h2>
+      <button class="modal-close" onclick="UTILS.closeModal('view-customer-modal')">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="view-customer-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UTILS.closeModal('view-customer-modal')">Close</button>
+      <button class="btn btn-gold" id="view-edit-btn">Edit Customer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h2 id="confirm-title">Confirm</h2><button class="modal-close" onclick="UTILS.closeModal('confirm-modal')"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="modal-body"><p id="confirm-msg" style="color:#4a5568;font-size:14px;"></p></div>
+    <div class="modal-footer"><button class="btn btn-outline" id="confirm-no">Cancel</button><button class="btn btn-danger" id="confirm-yes">Confirm</button></div>
+  </div>
+</div>
+
+<script src="js/logos.js"></script>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/nav.js"></script>
+
+<script>
+  AUTH.requireAuth();
+  document.getElementById('nav-container').innerHTML = buildNav('customers');
+  document.getElementById('topbar-container').innerHTML = buildTopBar('Customers', 'Client database');
+
+  let allCustomers = [];
+  let filteredCustomers = [];
+  let currentPage = 1;
+  const PER_PAGE = 15;
+
+  function loadCustomers() {
+    allCustomers = STORE.getCustomers().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    updateCityFilter();
+    filterCustomers(document.getElementById('search-input').value);
+  }
+
+  function updateCityFilter() {
+    const cities = [...new Set(allCustomers.map(c => c.city).filter(Boolean))].sort();
+    const sel = document.getElementById('city-filter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All Cities</option>' + cities.map(c => `<option value="${c}" ${c === current ? 'selected' : ''}>${c}</option>`).join('');
+  }
+
+  function filterCustomers(query) {
+    const city = document.getElementById('city-filter').value;
+    const q = (query || '').toLowerCase();
+    filteredCustomers = allCustomers.filter(c => {
+      const matchCity = !city || c.city === city;
+      const matchQ = !q ||
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.company || '').toLowerCase().includes(q) ||
+        (c.phone || '').includes(q) ||
+        (c.email || '').toLowerCase().includes(q) ||
+        (c.city || '').toLowerCase().includes(q) ||
+        (c.gst || '').toLowerCase().includes(q);
+      return matchCity && matchQ;
+    });
+    currentPage = 1;
+    renderTable();
+  }
+
+  function renderTable() {
+    document.getElementById('result-count').textContent = `${filteredCustomers.length} customer${filteredCustomers.length !== 1 ? 's' : ''}`;
+    const start = (currentPage - 1) * PER_PAGE;
+    const page = filteredCustomers.slice(start, start + PER_PAGE);
+    const tbody = document.getElementById('customers-tbody');
+    const quotations = STORE.getQuotations();
+
+    if (page.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <p>No customers found</p><span>Add your first customer to get started</span>
+      </div></td></tr>`;
+    } else {
+      tbody.innerHTML = page.map((c, idx) => {
+        const qCount = quotations.filter(q => q.customerId === c.id).length;
+        return `<tr>
+          <td style="color:var(--text-light);">${start + idx + 1}</td>
+          <td><div style="font-weight:600;">${UTILS.esc(c.name || '-')}</div></td>
+          <td>${UTILS.esc(c.company || '-')}</td>
+          <td><a href="tel:${UTILS.esc(c.phone)}" style="color:var(--navy);">${UTILS.esc(c.phone || '-')}</a></td>
+          <td><a href="mailto:${UTILS.esc(c.email)}" style="color:var(--navy);">${UTILS.esc(c.email || '-')}</a></td>
+          <td>${UTILS.esc(c.city || '-')}</td>
+          <td><span style="font-size:11px;font-family:monospace;">${UTILS.esc(c.gst || '-')}</span></td>
+          <td><span class="badge badge-navy">${qCount}</span></td>
+          <td>
+            <div style="display:flex;gap:4px;">
+              <button class="btn btn-outline btn-xs" onclick="viewCustomer('${c.id}')" title="View">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
+              <button class="btn btn-outline btn-xs" onclick="editCustomer('${c.id}')" title="Edit">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button class="btn btn-outline btn-xs" onclick="newQuotationForCustomer('${c.id}')" title="New Quotation" style="color:var(--gold-dark);border-color:var(--gold);">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </button>
+              <button class="btn btn-outline btn-xs" onclick="deleteCustomer('${c.id}')" title="Delete" style="color:var(--danger);border-color:rgba(197,48,48,0.3);">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const total = Math.ceil(filteredCustomers.length / PER_PAGE);
+    const p = document.getElementById('pagination');
+    if (total <= 1) { p.innerHTML = ''; return; }
+    let html = `<button onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || Math.abs(i - currentPage) <= 2) {
+        html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      } else if (Math.abs(i - currentPage) === 3) {
+        html += '<button disabled>...</button>';
+      }
+    }
+    html += `<button onclick="goPage(${currentPage + 1})" ${currentPage === total ? 'disabled' : ''}>Next ›</button>`;
+    p.innerHTML = html;
+  }
+
+  function goPage(p) {
+    const total = Math.ceil(filteredCustomers.length / PER_PAGE);
+    if (p < 1 || p > total) return;
+    currentPage = p;
+    renderTable();
+  }
+
+  function openAddCustomer() {
+    clearCustomerForm();
+    document.getElementById('customer-modal-title').textContent = 'Add Customer';
+    document.getElementById('customer-id').value = '';
+    UTILS.openModal('customer-modal');
+  }
+
+  function editCustomer(id) {
+    const c = STORE.getCustomer(id);
+    if (!c) return;
+    document.getElementById('customer-modal-title').textContent = 'Edit Customer';
+    document.getElementById('customer-id').value = c.id;
+    document.getElementById('c-name').value = c.name || '';
+    document.getElementById('c-company').value = c.company || '';
+    document.getElementById('c-phone').value = c.phone || '';
+    document.getElementById('c-email').value = c.email || '';
+    document.getElementById('c-gst').value = c.gst || '';
+    document.getElementById('c-city').value = c.city || '';
+    document.getElementById('c-state').value = c.state || '';
+    document.getElementById('c-pincode').value = c.pincode || '';
+    document.getElementById('c-address').value = c.address || '';
+    document.getElementById('c-notes').value = c.notes || '';
+    UTILS.closeModal('view-customer-modal');
+    UTILS.openModal('customer-modal');
+  }
+
+  function clearCustomerForm() {
+    ['c-name','c-company','c-phone','c-email','c-gst','c-city','c-state','c-pincode','c-address','c-notes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  }
+
+  function saveCustomer() {
+    const name = document.getElementById('c-name').value.trim();
+    const phone = document.getElementById('c-phone').value.trim();
+    if (!name) { UTILS.toast('Customer name is required', 'error'); return; }
+    if (!phone) { UTILS.toast('Phone number is required', 'error'); return; }
+
+    const data = {
+      id: document.getElementById('customer-id').value || undefined,
+      name, phone,
+      company: document.getElementById('c-company').value.trim(),
+      email: document.getElementById('c-email').value.trim(),
+      gst: document.getElementById('c-gst').value.trim().toUpperCase(),
+      city: document.getElementById('c-city').value.trim(),
+      state: document.getElementById('c-state').value.trim(),
+      pincode: document.getElementById('c-pincode').value.trim(),
+      address: document.getElementById('c-address').value.trim(),
+      notes: document.getElementById('c-notes').value.trim()
+    };
+
+    STORE.saveCustomer(data);
+    UTILS.closeModal('customer-modal');
+    UTILS.toast(data.id ? 'Customer updated successfully' : 'Customer added successfully', 'success');
+    loadCustomers();
+  }
+
+  function viewCustomer(id) {
+    const c = STORE.getCustomer(id);
+    if (!c) return;
+    const quotations = STORE.getQuotations().filter(q => q.customerId === id);
+    document.getElementById('view-customer-name').textContent = c.name;
+    document.getElementById('view-customer-body').innerHTML = `
+      <div class="form-grid" style="margin-bottom:20px;">
+        <div><label>Company</label><p style="margin-top:4px;">${UTILS.esc(c.company || '-')}</p></div>
+        <div><label>Phone</label><p style="margin-top:4px;">${UTILS.esc(c.phone || '-')}</p></div>
+        <div><label>Email</label><p style="margin-top:4px;">${UTILS.esc(c.email || '-')}</p></div>
+        <div><label>GST</label><p style="margin-top:4px;font-family:monospace;">${UTILS.esc(c.gst || '-')}</p></div>
+        <div><label>City</label><p style="margin-top:4px;">${UTILS.esc(c.city || '-')}</p></div>
+        <div><label>State</label><p style="margin-top:4px;">${UTILS.esc(c.state || '-')}</p></div>
+        <div class="full-width"><label>Address</label><p style="margin-top:4px;">${UTILS.esc(c.address || '-')}</p></div>
+        ${c.notes ? `<div class="full-width"><label>Notes</label><p style="margin-top:4px;color:var(--text-mid);">${UTILS.esc(c.notes)}</p></div>` : ''}
+      </div>
+      <div class="section-label">Quotation History (${quotations.length})</div>
+      ${quotations.length === 0 ? '<p style="color:var(--text-light);font-size:13px;">No quotations for this customer</p>' :
+        `<table style="width:100%;"><thead><tr style="background:var(--navy);color:white;"><th style="padding:8px;">Quot #</th><th style="padding:8px;">Project</th><th style="padding:8px;">Amount</th><th style="padding:8px;">Status</th><th style="padding:8px;">Date</th></tr></thead>
+        <tbody>${quotations.map(q => `<tr><td style="padding:8px;"><a href="quotations.html?view=${q.id}" style="color:var(--navy);font-weight:600;">${UTILS.esc(q.quotationNumber)}</a></td><td style="padding:8px;">${UTILS.esc(q.projectName)}</td><td style="padding:8px;">₹ ${UTILS.formatNum(q.grandTotal)}</td><td style="padding:8px;">${UTILS.statusBadge(q.status)}</td><td style="padding:8px;">${UTILS.formatDate(q.createdAt)}</td></tr>`).join('')}</tbody></table>`
+      }`;
+    document.getElementById('view-edit-btn').onclick = () => editCustomer(id);
+    UTILS.openModal('view-customer-modal');
+  }
+
+  async function deleteCustomer(id) {
+    const c = STORE.getCustomer(id);
+    const confirmed = await UTILS.confirm(`Delete customer "${c?.name}"? This cannot be undone.`, 'Delete Customer');
+    if (!confirmed) return;
+    STORE.deleteCustomer(id);
+    UTILS.toast('Customer deleted', 'success');
+    loadCustomers();
+  }
+
+  function newQuotationForCustomer(id) {
+    window.location.href = `quotations.html?new=1&customer=${id}`;
+  }
+
+  function exportCustomers() {
+    const data = filteredCustomers.map(c => ({
+      Name: c.name, Company: c.company || '', Phone: c.phone, Email: c.email || '',
+      GST: c.gst || '', City: c.city || '', State: c.state || '', Address: c.address || ''
+    }));
+    UTILS.exportCSV(data, 'IWY-Customers');
+    UTILS.toast('Customers exported to CSV', 'success');
+  }
+
+  // Check URL params
+  if (new URLSearchParams(location.search).get('new') === '1') {
+    setTimeout(openAddCustomer, 100);
+  }
+
+  loadCustomers();
+</script>
+</body>
+</html>

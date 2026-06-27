@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoices - IWY Designs ERP</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/print.css">
+</head>
+<body>
+<div class="app-layout">
+  <div id="nav-container"></div>
+  <div class="main-content">
+    <div id="topbar-container"></div>
+    <div class="page-content">
+
+      <!-- LIST VIEW -->
+      <div id="list-view">
+        <div class="page-header">
+          <div><h1>Invoices</h1><p>Manage project invoices</p></div>
+          <div class="page-actions">
+            <button class="btn btn-outline" onclick="exportInvoices()">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Export CSV
+            </button>
+            <button class="btn btn-outline-navy" onclick="openSelectQuotation()">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+              From Quotation
+            </button>
+            <button class="btn btn-gold" onclick="showForm('new')">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              New Invoice
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="topbar-search" style="flex:1;max-width:380px;">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="search-input" placeholder="Search by number, customer, project..." oninput="filterList()">
+          </div>
+          <select id="status-filter" onchange="filterList()" style="width:140px;">
+            <option value="">All Status</option>
+            <option>Unpaid</option><option>Paid</option><option>Partial</option><option>Cancelled</option>
+          </select>
+          <span id="result-count" style="font-size:12px;color:var(--text-light);white-space:nowrap;"></span>
+        </div>
+
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr><th>Invoice #</th><th>Quotation Ref</th><th>Customer</th><th>Project</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="list-tbody"></tbody>
+            </table>
+          </div>
+          <div style="padding:12px 16px;border-top:1px solid var(--border);">
+            <div id="pagination" class="pagination"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM VIEW -->
+      <div id="form-view" style="display:none;">
+        <div class="page-header">
+          <div>
+            <h1 id="form-title">New Invoice</h1>
+            <p id="form-subtitle">Create a new invoice</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-outline" onclick="showList()">← Back</button>
+            <button class="btn btn-gold" onclick="saveInvoice()">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Save Invoice
+            </button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><div class="card-title">Invoice Details</div><div id="inv-number-badge" style="font-size:13px;font-weight:600;color:var(--gold-dark);"></div></div>
+          <div class="card-body">
+            <input type="hidden" id="i-id">
+            <input type="hidden" id="i-quot-id">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Customer <span class="req">*</span></label>
+                <select id="i-customer" onchange="onCustomerChange()">
+                  <option value="">-- Select Customer --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Project Name <span class="req">*</span></label>
+                <input type="text" id="i-project" placeholder="Project name">
+              </div>
+              <div class="form-group">
+                <label>Invoice Date <span class="req">*</span></label>
+                <input type="date" id="i-date">
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select id="i-status">
+                  <option>Unpaid</option><option>Paid</option><option>Partial</option><option>Cancelled</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Linked Quotation</label>
+                <input type="text" id="i-quot-ref" readonly placeholder="(none)">
+              </div>
+              <div class="form-group">
+                <label>Site Address</label>
+                <input type="text" id="i-site" placeholder="Site address">
+              </div>
+              <div class="form-group">
+                <label>Discount (%)</label>
+                <input type="number" id="i-discount" value="0" min="0" max="100" step="0.5" oninput="recalcTotals()">
+              </div>
+              <div class="form-group">
+                <label>GST (%)</label>
+                <input type="number" id="i-gst" value="18" min="0" max="28" step="0.5" oninput="recalcTotals()">
+              </div>
+              <div class="form-group full-width">
+                <label>Remarks</label>
+                <textarea id="i-remarks" rows="2" placeholder="Remarks..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ITEMS -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title">Line Items</div>
+            <button class="btn btn-outline btn-sm" onclick="addItemRow()">+ Add Row</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="items-table" id="items-table" style="min-width:680px;">
+              <thead><tr>
+                <th style="width:30px;">#</th>
+                <th>Description</th>
+                <th style="width:100px;">Measurement</th>
+                <th style="width:70px;">Unit</th>
+                <th style="width:60px;">Qty</th>
+                <th style="width:110px;">Unit Price (₹)</th>
+                <th style="width:110px;">Amount (₹)</th>
+                <th style="width:50px;"></th>
+              </tr></thead>
+              <tbody id="items-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TOTALS -->
+        <div style="display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Terms & Conditions</div></div>
+            <div class="card-body"><textarea id="i-terms" rows="5" placeholder="Terms..."></textarea></div>
+          </div>
+          <div>
+            <div class="totals-section" style="min-width:290px;">
+              <div class="total-row"><span>Sub Total</span><span class="amount" id="t-subtotal">₹ 0.00</span></div>
+              <div class="total-row" id="disc-row"><span>Discount (<span id="t-disc-pct">0</span>%)</span><span class="amount" id="t-discount" style="color:var(--danger);">- ₹ 0.00</span></div>
+              <div class="total-row" id="gst-row"><span>GST (<span id="t-gst-pct">18</span>%)</span><span class="amount" id="t-gst">₹ 0.00</span></div>
+              <div class="total-row" id="round-row"><span>Round Off</span><span class="amount" id="t-round">₹ 0.00</span></div>
+              <div class="total-row main"><span>Grand Total</span><span id="t-grand">₹ 0.00</span></div>
+            </div>
+            <div class="amount-words" id="amount-words-box">Amount in Words: Zero Rupees Only</div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+          <button class="btn btn-outline" onclick="showList()">Cancel</button>
+          <button class="btn btn-primary" onclick="previewInvoice()">Preview</button>
+          <button class="btn btn-gold" onclick="saveInvoice()">Save Invoice</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SELECT QUOTATION MODAL -->
+<div class="modal-overlay" id="select-quot-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2>Select Quotation to Invoice</h2>
+      <button class="modal-close" onclick="UTILS.closeModal('select-quot-modal')"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="text" id="quot-search" placeholder="Search quotations..." oninput="filterQuots(this.value)" style="width:100%;margin-bottom:16px;">
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Quot #</th><th>Customer</th><th>Project</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+          <tbody id="quot-select-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF PREVIEW MODAL -->
+<div class="modal-overlay" id="pdf-preview-modal">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <h2>Invoice Preview</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-outline btn-sm" onclick="printCurrentDoc()">🖨 Print</button>
+        <button class="btn btn-gold btn-sm" onclick="downloadCurrentDoc()">⬇ Download PDF</button>
+        <button class="modal-close" onclick="UTILS.closeModal('pdf-preview-modal')"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      </div>
+    </div>
+    <div class="pdf-preview-wrapper">
+      <div id="pdf-preview-content" class="pdf-preview-doc"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<div class="modal-overlay" id="confirm-modal"><div class="modal modal-sm"><div class="modal-header"><h2 id="confirm-title">Confirm</h2><button class="modal-close" onclick="UTILS.closeModal('confirm-modal')"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><div class="modal-body"><p id="confirm-msg" style="color:#4a5568;font-size:14px;"></p></div><div class="modal-footer"><button class="btn btn-outline" id="confirm-no">Cancel</button><button class="btn btn-danger" id="confirm-yes">Confirm</button></div></div></div>
+
+<script src="js/logos.js"></script>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/pdf.js"></script>
+
+<script>
+  AUTH.requireAuth();
+  document.getElementById('nav-container').innerHTML = buildNav('invoices');
+  document.getElementById('topbar-container').innerHTML = buildTopBar('Invoices', 'Manage project invoices');
+
+  let allData = [], filteredData = [], currentPage = 1, PER_PAGE = 10;
+  let currentDocData = null, itemCount = 0;
+
+  function showList() {
+    document.getElementById('list-view').style.display = 'block';
+    document.getElementById('form-view').style.display = 'none';
+    loadList();
+  }
+
+  function loadList() {
+    allData = STORE.getInvoices().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    filterList();
+  }
+
+  function filterList() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    const status = document.getElementById('status-filter').value;
+    filteredData = allData.filter(i => {
+      const mS = !status || i.status === status;
+      const mQ = !q || (i.invoiceNumber || '').toLowerCase().includes(q) ||
+        (i.customerName || '').toLowerCase().includes(q) ||
+        (i.projectName || '').toLowerCase().includes(q) ||
+        (i.quotationNumber || '').toLowerCase().includes(q);
+      return mS && mQ;
+    });
+    currentPage = 1;
+    renderList();
+  }
+
+  function renderList() {
+    const sym = STORE.getSettings().currency || '₹';
+    document.getElementById('result-count').textContent = `${filteredData.length} invoice${filteredData.length !== 1 ? 's' : ''}`;
+    const start = (currentPage - 1) * PER_PAGE;
+    const page = filteredData.slice(start, start + PER_PAGE);
+    const tbody = document.getElementById('list-tbody');
+    if (page.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p>No invoices found</p><span>Convert a quotation to invoice to get started</span></div></td></tr>`;
+    } else {
+      tbody.innerHTML = page.map(inv => `<tr>
+        <td><a href="#" onclick="viewInvoice('${inv.id}');return false;" style="color:var(--navy);font-weight:700;">${UTILS.esc(inv.invoiceNumber)}</a></td>
+        <td>${inv.quotationNumber ? `<a href="quotations.html?view=${inv.quotationId}" style="color:var(--text-mid);font-size:12px;">${UTILS.esc(inv.quotationNumber)}</a>` : '-'}</td>
+        <td><div style="font-weight:500;">${UTILS.esc(inv.customerName || '-')}</div></td>
+        <td>${UTILS.esc(inv.projectName || '-')}</td>
+        <td>${UTILS.formatDate(inv.invoiceDate || inv.date || inv.createdAt)}</td>
+        <td style="font-weight:600;">${sym} ${UTILS.formatNum(inv.grandTotal)}</td>
+        <td>${UTILS.statusBadge(inv.status)}</td>
+        <td>
+          <div style="display:flex;gap:3px;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-xs" onclick="viewInvoice('${inv.id}')" title="View">👁</button>
+            <button class="btn btn-outline btn-xs" onclick="showForm('edit','${inv.id}')" title="Edit">✏️</button>
+            <select onchange="updateStatus('${inv.id}',this.value)" style="font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;">
+              ${['Unpaid','Paid','Partial','Cancelled'].map(s => `<option ${s===inv.status?'selected':''}>${s}</option>`).join('')}
+            </select>
+            <button class="btn btn-outline btn-xs" onclick="deleteInvoice('${inv.id}')" title="Delete" style="color:var(--danger);">🗑</button>
+          </div>
+        </td>
+      </tr>`).join('');
+    }
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const total = Math.ceil(filteredData.length / PER_PAGE);
+    const p = document.getElementById('pagination');
+    if (total <= 1) { p.innerHTML = ''; return; }
+    let html = `<button onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    for (let i=1;i<=total;i++){
+      if(i===1||i===total||Math.abs(i-currentPage)<=1) html+=`<button class="${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      else if(Math.abs(i-currentPage)===2) html+='<button disabled>...</button>';
+    }
+    html+=`<button onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
+    p.innerHTML = html;
+  }
+  function goPage(p){const t=Math.ceil(filteredData.length/PER_PAGE);if(p<1||p>t)return;currentPage=p;renderList();}
+
+  function showForm(mode, id) {
+    document.getElementById('list-view').style.display = 'none';
+    document.getElementById('form-view').style.display = 'block';
+    const s = STORE.getSettings();
+
+    // Load customers
+    const customers = STORE.getCustomers();
+    const sel = document.getElementById('i-customer');
+    sel.innerHTML = '<option value="">-- Select Customer --</option>' + customers.map(c => `<option value="${c.id}">${UTILS.esc(c.name)}${c.company ? ' - ' + UTILS.esc(c.company) : ''}</option>`).join('');
+
+    if (mode === 'new') {
+      document.getElementById('form-title').textContent = 'New Invoice';
+      document.getElementById('form-subtitle').textContent = 'Create a new project invoice';
+      document.getElementById('i-id').value = '';
+      document.getElementById('i-quot-id').value = '';
+      document.getElementById('i-quot-ref').value = '';
+      document.getElementById('i-date').value = UTILS.todayISO();
+      document.getElementById('i-project').value = '';
+      document.getElementById('i-site').value = '';
+      document.getElementById('i-discount').value = '0';
+      document.getElementById('i-gst').value = s.defaultGST || 18;
+      document.getElementById('i-remarks').value = '';
+      document.getElementById('i-terms').value = s.defaultTerms || '';
+      document.getElementById('i-status').value = 'Unpaid';
+      document.getElementById('inv-number-badge').textContent = 'New (auto-numbered on save)';
+      clearItems(); addItemRow(); recalcTotals();
+    } else if (mode === 'edit' && id) {
+      const inv = STORE.getInvoice(id);
+      if (!inv) { showList(); return; }
+      document.getElementById('form-title').textContent = 'Edit Invoice';
+      document.getElementById('form-subtitle').textContent = inv.invoiceNumber;
+      document.getElementById('i-id').value = inv.id;
+      document.getElementById('i-quot-id').value = inv.quotationId || '';
+      document.getElementById('i-quot-ref').value = inv.quotationNumber || '';
+      document.getElementById('i-customer').value = inv.customerId || '';
+      document.getElementById('i-project').value = inv.projectName || '';
+      document.getElementById('i-date').value = UTILS.toDateInput(inv.invoiceDate || inv.date);
+      document.getElementById('i-site').value = inv.siteAddress || '';
+      document.getElementById('i-discount').value = inv.discountPct || 0;
+      document.getElementById('i-gst').value = inv.gstPct ?? (s.defaultGST || 18);
+      document.getElementById('i-remarks').value = inv.remarks || '';
+      document.getElementById('i-terms').value = inv.terms || s.defaultTerms || '';
+      document.getElementById('i-status').value = inv.status || 'Unpaid';
+      document.getElementById('inv-number-badge').textContent = inv.invoiceNumber;
+      clearItems(); (inv.items || []).forEach(item => addItemRow(item));
+      if (!inv.items || inv.items.length === 0) addItemRow();
+      recalcTotals();
+    }
+  }
+
+  function clearItems() { document.getElementById('items-tbody').innerHTML = ''; itemCount = 0; }
+
+  function addItemRow(data) {
+    itemCount++;
+    const n = itemCount;
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    tr.innerHTML = `
+      <td style="color:var(--gold);font-weight:700;font-size:12px;">${n}</td>
+      <td><input type="text" class="desc" placeholder="Description..." value="${UTILS.esc(data?.description || '')}"></td>
+      <td><input type="text" class="meas" placeholder="Size" value="${UTILS.esc(data?.measurement || '')}"></td>
+      <td><input type="text" class="unit" placeholder="SFT" value="${UTILS.esc(data?.unit || '')}"></td>
+      <td><input type="number" class="qty" placeholder="0" value="${data?.qty || ''}" min="0" step="any" oninput="calcRowAmount(this)"></td>
+      <td><input type="number" class="price" placeholder="0.00" value="${data?.unitPrice || ''}" min="0" step="0.01" oninput="calcRowAmount(this)"></td>
+      <td><input type="number" class="amount" readonly value="${data?.amount || ''}" style="background:var(--off-white);font-weight:600;"></td>
+      <td><button onclick="this.closest('tr').remove();recalcTotals();" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:16px;">🗑</button></td>`;
+    document.getElementById('items-tbody').appendChild(tr);
+  }
+
+  function calcRowAmount(input) {
+    const row = input.closest('tr');
+    const qty = parseFloat(row.querySelector('.qty').value) || 0;
+    const price = parseFloat(row.querySelector('.price').value) || 0;
+    row.querySelector('.amount').value = (qty * price).toFixed(2);
+    recalcTotals();
+  }
+
+  function getItems() {
+    return [...document.querySelectorAll('#items-tbody .item-row')].map(tr => ({
+      description: tr.querySelector('.desc').value.trim(),
+      measurement: tr.querySelector('.meas').value.trim(),
+      unit: tr.querySelector('.unit').value.trim(),
+      qty: parseFloat(tr.querySelector('.qty').value) || 0,
+      unitPrice: parseFloat(tr.querySelector('.price').value) || 0,
+      amount: parseFloat(tr.querySelector('.amount').value) || 0
+    })).filter(i => i.description || i.amount);
+  }
+
+  function recalcTotals() {
+    const items = [...document.querySelectorAll('#items-tbody .item-row')].map(tr => ({ amount: parseFloat(tr.querySelector('.amount').value) || 0 }));
+    const discPct = parseFloat(document.getElementById('i-discount').value) || 0;
+    const gstPct = parseFloat(document.getElementById('i-gst').value) || 0;
+    const t = UTILS.calcTotals(items, discPct, gstPct);
+    const sym = STORE.getSettings().currency || '₹';
+    document.getElementById('t-subtotal').textContent = `${sym} ${UTILS.formatNum(t.subtotal)}`;
+    document.getElementById('t-disc-pct').textContent = discPct;
+    document.getElementById('t-discount').textContent = `- ${sym} ${UTILS.formatNum(t.discountAmt)}`;
+    document.getElementById('disc-row').style.display = t.discountAmt > 0 ? 'flex' : 'none';
+    document.getElementById('t-gst-pct').textContent = gstPct;
+    document.getElementById('t-gst').textContent = `${sym} ${UTILS.formatNum(t.gstAmt)}`;
+    document.getElementById('gst-row').style.display = t.gstAmt > 0 ? 'flex' : 'none';
+    document.getElementById('t-round').textContent = (t.roundOff >= 0 ? '+' : '') + UTILS.formatNum(t.roundOff);
+    document.getElementById('round-row').style.display = t.roundOff !== 0 ? 'flex' : 'none';
+    document.getElementById('t-grand').textContent = `${sym} ${UTILS.formatNum(t.grandTotal)}`;
+    document.getElementById('amount-words-box').innerHTML = 'Amount in Words: <strong>' + UTILS.amountInWords(t.grandTotal) + '</strong>';
+  }
+
+  function saveInvoice() {
+    const customerId = document.getElementById('i-customer').value;
+    const projectName = document.getElementById('i-project').value.trim();
+    if (!customerId) { UTILS.toast('Please select a customer', 'error'); return; }
+    if (!projectName) { UTILS.toast('Please enter a project name', 'error'); return; }
+
+    const customer = STORE.getCustomer(customerId);
+    const items = getItems();
+    const discPct = parseFloat(document.getElementById('i-discount').value) || 0;
+    const gstPct = parseFloat(document.getElementById('i-gst').value) || 0;
+    const totals = UTILS.calcTotals(items, discPct, gstPct);
+
+    const data = {
+      id: document.getElementById('i-id').value || undefined,
+      quotationId: document.getElementById('i-quot-id').value,
+      quotationNumber: document.getElementById('i-quot-ref').value,
+      customerId,
+      customerName: customer?.name || '',
+      customerCompany: customer?.company || '',
+      customerPhone: customer?.phone || '',
+      customerEmail: customer?.email || '',
+      customerAddress: customer?.address || '',
+      customerGst: customer?.gst || '',
+      projectName,
+      invoiceDate: document.getElementById('i-date').value,
+      siteAddress: document.getElementById('i-site').value.trim(),
+      discountPct: discPct, gstPct,
+      remarks: document.getElementById('i-remarks').value.trim(),
+      terms: document.getElementById('i-terms').value.trim(),
+      status: document.getElementById('i-status').value,
+      items, ...totals
+    };
+
+    const id = STORE.saveInvoice(data);
+    currentDocData = STORE.getInvoice(id);
+    UTILS.toast('Invoice saved successfully!', 'success');
+    showList();
+    viewInvoice(id);
+  }
+
+  function viewInvoice(id) {
+    const inv = STORE.getInvoice(id);
+    currentDocData = inv;
+    PDF.preview(inv, 'invoice');
+  }
+
+  function previewInvoice() {
+    const customerId = document.getElementById('i-customer').value;
+    if (!customerId) { UTILS.toast('Please fill in customer and save first', 'info'); return; }
+    saveInvoice();
+  }
+
+  function printCurrentDoc() { if (currentDocData) PDF.print(currentDocData, 'invoice'); }
+  function downloadCurrentDoc() { if (currentDocData) PDF.download(currentDocData, 'invoice'); }
+
+  function updateStatus(id, status) {
+    const inv = STORE.getInvoice(id);
+    if (!inv) return;
+    STORE.saveInvoice({ ...inv, status });
+    UTILS.toast('Status updated to ' + status, 'success');
+    loadList();
+  }
+
+  async function deleteInvoice(id) {
+    const inv = STORE.getInvoice(id);
+    const confirmed = await UTILS.confirm(`Delete invoice "${inv?.invoiceNumber}"?`, 'Delete Invoice');
+    if (!confirmed) return;
+    STORE.deleteInvoice(id);
+    UTILS.toast('Invoice deleted', 'success');
+    loadList();
+  }
+
+  function openSelectQuotation() {
+    renderQuotsList('');
+    UTILS.openModal('select-quot-modal');
+  }
+
+  let allQuots = [];
+  function renderQuotsList(query) {
+    allQuots = STORE.getQuotations().filter(q => q.status !== 'Invoiced');
+    const q = query.toLowerCase();
+    const filtered = q ? allQuots.filter(qt =>
+      (qt.quotationNumber || '').toLowerCase().includes(q) ||
+      (qt.customerName || '').toLowerCase().includes(q) ||
+      (qt.projectName || '').toLowerCase().includes(q)
+    ) : allQuots;
+
+    const sym = STORE.getSettings().currency || '₹';
+    document.getElementById('quot-select-tbody').innerHTML = filtered.length === 0
+      ? '<tr><td colspan="6" style="text-align:center;padding:20px;color:#a0aec0;">No open quotations</td></tr>'
+      : filtered.map(q => `<tr>
+          <td style="font-weight:600;color:var(--navy);">${UTILS.esc(q.quotationNumber)}</td>
+          <td>${UTILS.esc(q.customerName)}</td>
+          <td>${UTILS.esc(q.projectName)}</td>
+          <td>${sym} ${UTILS.formatNum(q.grandTotal)}</td>
+          <td>${UTILS.statusBadge(q.status)}</td>
+          <td><button class="btn btn-gold btn-sm" onclick="selectQuotation('${q.id}')">Select</button></td>
+        </tr>`).join('');
+  }
+
+  function filterQuots(query) { renderQuotsList(query); }
+
+  function selectQuotation(id) {
+    const q = STORE.getQuotation(id);
+    if (!q) return;
+    UTILS.closeModal('select-quot-modal');
+    showForm('new');
+
+    // Populate from quotation
+    const sel = document.getElementById('i-customer');
+    if (q.customerId) sel.value = q.customerId;
+    document.getElementById('i-project').value = q.projectName || '';
+    document.getElementById('i-site').value = q.siteAddress || '';
+    document.getElementById('i-discount').value = q.discountPct || 0;
+    document.getElementById('i-gst').value = q.gstPct ?? 18;
+    document.getElementById('i-remarks').value = q.remarks || '';
+    document.getElementById('i-terms').value = q.terms || STORE.getSettings().defaultTerms || '';
+    document.getElementById('i-quot-id').value = q.id;
+    document.getElementById('i-quot-ref').value = q.quotationNumber;
+    clearItems();
+    (q.items || []).forEach(item => addItemRow(item));
+    if (!q.items || q.items.length === 0) addItemRow();
+    recalcTotals();
+  }
+
+  function onCustomerChange() {
+    const id = document.getElementById('i-customer').value;
+    const c = STORE.getCustomer(id);
+    if (c?.address) document.getElementById('i-site').value = c.address;
+  }
+
+  function exportInvoices() {
+    const data = filteredData.map(i => ({
+      'Invoice #': i.invoiceNumber, 'Quotation Ref': i.quotationNumber || '',
+      Customer: i.customerName, Project: i.projectName,
+      Date: UTILS.formatDate(i.invoiceDate), Amount: i.grandTotal, Status: i.status
+    }));
+    UTILS.exportCSV(data, 'IWY-Invoices');
+    UTILS.toast('Invoices exported', 'success');
+  }
+
+  // URL params
+  const params = new URLSearchParams(location.search);
+  if (params.get('view')) {
+    showList();
+    viewInvoice(params.get('view'));
+  } else if (params.get('new') === '1') {
+    showForm('new');
+  } else {
+    showList();
+  }
+</script>
+</body>
+</html>

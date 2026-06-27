@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports - IWY Designs ERP</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div id="nav-placeholder"></div>
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Reports</h1>
+        <p class="page-subtitle">Analytics & Business Insights</p>
+      </div>
+      <button class="btn btn-primary" onclick="exportAllCSV()">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Export All
+      </button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="stats-grid" id="summaryCards"></div>
+
+    <!-- Report Tabs -->
+    <div class="card" style="margin-top:24px">
+      <div class="card-header">
+        <div class="tab-group" id="reportTabs">
+          <button class="tab-btn active" onclick="switchTab('quotation')">Quotation Report</button>
+          <button class="tab-btn" onclick="switchTab('invoice')">Invoice Report</button>
+          <button class="tab-btn" onclick="switchTab('customer')">Customer Report</button>
+          <button class="tab-btn" onclick="switchTab('revenue')">Monthly Revenue</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="form-control" id="filterYear" onchange="renderCurrentTab()" style="width:120px">
+            <option value="">All Years</option>
+          </select>
+          <button class="btn btn-ghost" onclick="exportCurrentTab()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            Export CSV
+          </button>
+          <button class="btn btn-ghost" onclick="printReport()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Print
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="reportContent"></div>
+      </div>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="card" style="margin-top:24px" id="revenueChartCard">
+      <div class="card-header">
+        <h3 class="card-title">Monthly Revenue Trend</h3>
+      </div>
+      <div class="card-body">
+        <div id="revenueChart" style="height:220px;display:flex;align-items:flex-end;gap:8px;padding:16px 0"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<style>
+.tab-group { display:flex; gap:4px; flex-wrap:wrap; }
+.tab-btn { padding:8px 16px; border:none; background:transparent; color:var(--gray-500); font-size:14px; font-weight:500; cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; }
+.tab-btn.active { color:var(--navy); border-bottom-color:var(--gold); }
+.tab-btn:hover:not(.active) { color:var(--navy); }
+.card-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+.report-table { width:100%; border-collapse:collapse; font-size:13px; }
+.report-table th { background:var(--navy); color:#fff; padding:10px 12px; text-align:left; font-weight:500; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+.report-table td { padding:10px 12px; border-bottom:1px solid var(--gray-100); color:var(--gray-700); }
+.report-table tr:hover td { background:var(--gray-50); }
+.report-table .amount { text-align:right; font-weight:500; color:var(--navy); }
+.status-badge.status-paid { background:#d1fae5; color:#065f46; }
+.status-badge.status-unpaid { background:#fee2e2; color:#991b1b; }
+.status-badge.status-partial { background:#fef3c7; color:#92400e; }
+.status-badge.status-cancelled { background:#f3f4f6; color:#374151; }
+.bar-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; min-width:30px; }
+.bar { background:linear-gradient(180deg,var(--gold),#b8952e); border-radius:4px 4px 0 0; min-height:4px; width:100%; transition:height .5s; }
+.bar-label { font-size:10px; color:var(--gray-500); writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; }
+.bar-val { font-size:10px; color:var(--navy); font-weight:600; }
+.summary-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+.summary-chip { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:12px 16px; min-width:140px; }
+.summary-chip .chip-label { font-size:11px; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; }
+.summary-chip .chip-val { font-size:20px; font-weight:700; color:var(--navy); margin-top:2px; }
+.empty-state { text-align:center; padding:48px; color:var(--gray-400); }
+</style>
+
+<script src="js/logos.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/store.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/nav.js"></script>
+<script>
+AUTH.requireLogin();
+document.getElementById('nav-placeholder').innerHTML = buildNav('reports');
+initMobileMenu();
+
+let currentTab = 'quotation';
+
+function init() {
+  populateYears();
+  renderSummaryCards();
+  renderCurrentTab();
+  renderRevenueChart();
+}
+
+function populateYears() {
+  const q = STORE.getAllQuotations();
+  const inv = STORE.getAllInvoices();
+  const years = new Set();
+  [...q, ...inv].forEach(r => {
+    const y = (r.date || '').substring(0, 4);
+    if (y) years.add(y);
+  });
+  const sel = document.getElementById('filterYear');
+  [...years].sort().reverse().forEach(y => {
+    sel.innerHTML += `<option value="${y}">${y}</option>`;
+  });
+}
+
+function renderSummaryCards() {
+  const customers = STORE.getAllCustomers();
+  const quotations = STORE.getAllQuotations();
+  const invoices = STORE.getAllInvoices();
+  const s = STORE.getSettings();
+  const totalRev = invoices.filter(i => i.status === 'Paid').reduce((a, b) => a + (b.grandTotal || 0), 0);
+  const pendingAmt = invoices.filter(i => i.status === 'Unpaid' || i.status === 'Partial').reduce((a, b) => a + (b.grandTotal || 0), 0);
+
+  document.getElementById('summaryCards').innerHTML = [
+    { label: 'Total Customers', value: customers.length, sub: 'Registered clients', color: 'var(--navy)' },
+    { label: 'Total Quotations', value: quotations.length, sub: `${quotations.filter(q => q.status === 'Pending').length} pending`, color: '#0369a1' },
+    { label: 'Total Invoices', value: invoices.length, sub: `${invoices.filter(i => i.status === 'Paid').length} paid`, color: '#065f46' },
+    { label: 'Total Revenue', value: s.currency + UTILS.formatNumber(totalRev), sub: s.currency + UTILS.formatNumber(pendingAmt) + ' pending', color: '#92400e' },
+  ].map(c => `
+    <div class="stat-card">
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value" style="color:${c.color}">${c.value}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>
+  `).join('');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['quotation','invoice','customer','revenue'][i] === tab);
+  });
+  const chartCard = document.getElementById('revenueChartCard');
+  chartCard.style.display = tab === 'revenue' ? 'block' : 'none';
+  renderCurrentTab();
+}
+
+function renderCurrentTab() {
+  const year = document.getElementById('filterYear').value;
+  if (currentTab === 'quotation') renderQuotationReport(year);
+  else if (currentTab === 'invoice') renderInvoiceReport(year);
+  else if (currentTab === 'customer') renderCustomerReport(year);
+  else renderRevenueReport(year);
+}
+
+function filterByYear(records, year) {
+  if (!year) return records;
+  return records.filter(r => (r.date || '').startsWith(year));
+}
+
+function renderQuotationReport(year) {
+  const data = filterByYear(STORE.getAllQuotations(), year);
+  const s = STORE.getSettings();
+  const total = data.reduce((a, b) => a + (b.grandTotal || 0), 0);
+  const html = `
+    <div class="summary-row">
+      <div class="summary-chip"><div class="chip-label">Total</div><div class="chip-val">${data.length}</div></div>
+      <div class="summary-chip"><div class="chip-label">Value</div><div class="chip-val">${s.currency}${UTILS.formatNumber(total)}</div></div>
+      <div class="summary-chip"><div class="chip-label">Pending</div><div class="chip-val">${data.filter(q=>q.status==='Pending').length}</div></div>
+      <div class="summary-chip"><div class="chip-label">Invoiced</div><div class="chip-val">${data.filter(q=>q.status==='Invoiced').length}</div></div>
+    </div>
+    ${data.length ? `<table class="report-table">
+      <thead><tr><th>Quotation No</th><th>Date</th><th>Customer</th><th>Project</th><th>Status</th><th class="amount">Amount</th></tr></thead>
+      <tbody>${data.sort((a,b) => b.date > a.date ? 1 : -1).map(q => `
+        <tr>
+          <td><a href="quotations.html?id=${q.id}" style="color:var(--navy);font-weight:600">${q.quotationNo || '-'}</a></td>
+          <td>${UTILS.formatDate(q.date)}</td>
+          <td>${q.customerName || '-'}</td>
+          <td>${q.projectName || '-'}</td>
+          <td><span class="status-badge status-${(q.status||'pending').toLowerCase()}">${q.status || 'Pending'}</span></td>
+          <td class="amount">${s.currency}${UTILS.formatNumber(q.grandTotal||0)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : '<div class="empty-state">No quotations found</div>'}`;
+  document.getElementById('reportContent').innerHTML = html;
+}
+
+function renderInvoiceReport(year) {
+  const data = filterByYear(STORE.getAllInvoices(), year);
+  const s = STORE.getSettings();
+  const paid = data.filter(i => i.status === 'Paid').reduce((a,b) => a+(b.grandTotal||0), 0);
+  const pending = data.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled').reduce((a,b) => a+(b.grandTotal||0), 0);
+  const html = `
+    <div class="summary-row">
+      <div class="summary-chip"><div class="chip-label">Total Invoices</div><div class="chip-val">${data.length}</div></div>
+      <div class="summary-chip"><div class="chip-label">Collected</div><div class="chip-val">${s.currency}${UTILS.formatNumber(paid)}</div></div>
+      <div class="summary-chip"><div class="chip-label">Outstanding</div><div class="chip-val">${s.currency}${UTILS.formatNumber(pending)}</div></div>
+      <div class="summary-chip"><div class="chip-label">Paid</div><div class="chip-val">${data.filter(i=>i.status==='Paid').length}</div></div>
+    </div>
+    ${data.length ? `<table class="report-table">
+      <thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Project</th><th>Quotation Ref</th><th>Status</th><th class="amount">Amount</th></tr></thead>
+      <tbody>${data.sort((a,b) => b.date > a.date ? 1 : -1).map(inv => `
+        <tr>
+          <td><strong>${inv.invoiceNo || '-'}</strong></td>
+          <td>${UTILS.formatDate(inv.date)}</td>
+          <td>${inv.customerName || '-'}</td>
+          <td>${inv.projectName || '-'}</td>
+          <td>${inv.quotationNo || '-'}</td>
+          <td><span class="status-badge status-${(inv.status||'unpaid').toLowerCase()}">${inv.status || 'Unpaid'}</span></td>
+          <td class="amount">${s.currency}${UTILS.formatNumber(inv.grandTotal||0)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : '<div class="empty-state">No invoices found</div>'}`;
+  document.getElementById('reportContent').innerHTML = html;
+}
+
+function renderCustomerReport(year) {
+  const customers = STORE.getAllCustomers();
+  const quotations = STORE.getAllQuotations();
+  const invoices = STORE.getAllInvoices();
+  const s = STORE.getSettings();
+
+  const rows = customers.map(c => {
+    const cq = filterByYear(quotations.filter(q => q.customerId === c.id), year);
+    const ci = filterByYear(invoices.filter(i => i.customerId === c.id), year);
+    const revenue = ci.filter(i => i.status === 'Paid').reduce((a,b) => a+(b.grandTotal||0), 0);
+    return { ...c, qCount: cq.length, iCount: ci.length, revenue };
+  }).sort((a,b) => b.revenue - a.revenue);
+
+  const html = `
+    <div class="summary-row">
+      <div class="summary-chip"><div class="chip-label">Total Customers</div><div class="chip-val">${customers.length}</div></div>
+      <div class="summary-chip"><div class="chip-label">Active</div><div class="chip-val">${rows.filter(r=>r.qCount>0||r.iCount>0).length}</div></div>
+    </div>
+    ${rows.length ? `<table class="report-table">
+      <thead><tr><th>Customer</th><th>Company</th><th>City</th><th>Quotations</th><th>Invoices</th><th class="amount">Revenue</th></tr></thead>
+      <tbody>${rows.map(c => `
+        <tr>
+          <td><strong>${c.name}</strong><br><small style="color:var(--gray-400)">${c.phone||''}</small></td>
+          <td>${c.company || '-'}</td>
+          <td>${c.city || '-'}</td>
+          <td style="text-align:center">${c.qCount}</td>
+          <td style="text-align:center">${c.iCount}</td>
+          <td class="amount">${s.currency}${UTILS.formatNumber(c.revenue)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : '<div class="empty-state">No customers found</div>'}`;
+  document.getElementById('reportContent').innerHTML = html;
+}
+
+function renderRevenueReport(year) {
+  const invoices = STORE.getAllInvoices();
+  const s = STORE.getSettings();
+  const byMonth = {};
+  filterByYear(invoices, year).forEach(inv => {
+    const ym = (inv.date || '').substring(0, 7);
+    if (!ym) return;
+    if (!byMonth[ym]) byMonth[ym] = { total: 0, paid: 0, count: 0 };
+    byMonth[ym].total += inv.grandTotal || 0;
+    if (inv.status === 'Paid') byMonth[ym].paid += inv.grandTotal || 0;
+    byMonth[ym].count++;
+  });
+  const months = Object.keys(byMonth).sort();
+  const html = `
+    ${months.length ? `<table class="report-table">
+      <thead><tr><th>Month</th><th>Invoices</th><th class="amount">Total Billed</th><th class="amount">Collected</th><th class="amount">Outstanding</th></tr></thead>
+      <tbody>${months.map(ym => {
+        const d = byMonth[ym];
+        const [y, m] = ym.split('-');
+        const mn = new Date(y, m-1).toLocaleString('en', {month:'long', year:'numeric'});
+        return `<tr>
+          <td><strong>${mn}</strong></td>
+          <td style="text-align:center">${d.count}</td>
+          <td class="amount">${s.currency}${UTILS.formatNumber(d.total)}</td>
+          <td class="amount" style="color:#065f46">${s.currency}${UTILS.formatNumber(d.paid)}</td>
+          <td class="amount" style="color:#991b1b">${s.currency}${UTILS.formatNumber(d.total-d.paid)}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+      <tfoot><tr style="background:var(--gray-50)">
+        <td><strong>Total</strong></td>
+        <td style="text-align:center"><strong>${months.reduce((a,m)=>a+byMonth[m].count,0)}</strong></td>
+        <td class="amount"><strong>${s.currency}${UTILS.formatNumber(months.reduce((a,m)=>a+byMonth[m].total,0))}</strong></td>
+        <td class="amount" style="color:#065f46"><strong>${s.currency}${UTILS.formatNumber(months.reduce((a,m)=>a+byMonth[m].paid,0))}</strong></td>
+        <td class="amount" style="color:#991b1b"><strong>${s.currency}${UTILS.formatNumber(months.reduce((a,m)=>a+byMonth[m].total-byMonth[m].paid,0))}</strong></td>
+      </tr></tfoot>
+    </table>` : '<div class="empty-state">No revenue data found</div>'}`;
+  document.getElementById('reportContent').innerHTML = html;
+}
+
+function renderRevenueChart() {
+  const invoices = STORE.getAllInvoices();
+  const s = STORE.getSettings();
+  const byMonth = {};
+  invoices.forEach(inv => {
+    const ym = (inv.date || '').substring(0, 7);
+    if (!ym) return;
+    if (!byMonth[ym]) byMonth[ym] = 0;
+    byMonth[ym] += inv.grandTotal || 0;
+  });
+  const months = Object.keys(byMonth).sort().slice(-12);
+  if (!months.length) { document.getElementById('revenueChartCard').style.display = 'none'; return; }
+  const max = Math.max(...months.map(m => byMonth[m]));
+  const el = document.getElementById('revenueChart');
+  el.innerHTML = months.map(ym => {
+    const [y, m] = ym.split('-');
+    const mn = new Date(y, m-1).toLocaleString('en', {month:'short'});
+    const pct = max ? (byMonth[ym]/max*180) : 0;
+    return `<div class="bar-wrap">
+      <div class="bar-val">${s.currency}${UTILS.formatNumber(byMonth[ym]/1000)}K</div>
+      <div class="bar" style="height:${pct}px"></div>
+      <div class="bar-label">${mn} ${y.slice(2)}</div>
+    </div>`;
+  }).join('');
+}
+
+function exportCurrentTab() {
+  const year = document.getElementById('filterYear').value;
+  if (currentTab === 'quotation') exportQuotationsCSV(year);
+  else if (currentTab === 'invoice') exportInvoicesCSV(year);
+  else if (currentTab === 'customer') exportCustomersCSV();
+  else exportRevenueCSV(year);
+}
+
+function exportAllCSV() {
+  exportQuotationsCSV('');
+  setTimeout(() => exportInvoicesCSV(''), 500);
+  setTimeout(() => exportCustomersCSV(), 1000);
+}
+
+function exportQuotationsCSV(year) {
+  const data = filterByYear(STORE.getAllQuotations(), year);
+  const csv = ['Quotation No,Date,Customer,Project,Status,Amount'].concat(
+    data.map(q => `"${q.quotationNo||''}","${q.date||''}","${q.customerName||''}","${q.projectName||''}","${q.status||''}","${q.grandTotal||0}"`)
+  ).join('\n');
+  UTILS.downloadCSV(csv, `IWY_Quotations_${year||'All'}.csv`);
+}
+
+function exportInvoicesCSV(year) {
+  const data = filterByYear(STORE.getAllInvoices(), year);
+  const csv = ['Invoice No,Date,Customer,Project,Quotation Ref,Status,Amount'].concat(
+    data.map(i => `"${i.invoiceNo||''}","${i.date||''}","${i.customerName||''}","${i.projectName||''}","${i.quotationNo||''}","${i.status||''}","${i.grandTotal||0}"`)
+  ).join('\n');
+  UTILS.downloadCSV(csv, `IWY_Invoices_${year||'All'}.csv`);
+}
+
+function exportCustomersCSV() {
+  const data = STORE.getAllCustomers();
+  const csv = ['Name,Company,Phone,Email,City,State'].concat(
+    data.map(c => `"${c.name||''}","${c.company||''}","${c.phone||''}","${c.email||''}","${c.city||''}","${c.state||''}"`)
+  ).join('\n');
+  UTILS.downloadCSV(csv, 'IWY_Customers.csv');
+}
+
+function exportRevenueCSV(year) {
+  const invoices = STORE.getAllInvoices();
+  const byMonth = {};
+  filterByYear(invoices, year).forEach(inv => {
+    const ym = (inv.date || '').substring(0, 7);
+    if (!ym) return;
+    if (!byMonth[ym]) byMonth[ym] = { total: 0, paid: 0, count: 0 };
+    byMonth[ym].total += inv.grandTotal || 0;
+    if (inv.status === 'Paid') byMonth[ym].paid += inv.grandTotal || 0;
+    byMonth[ym].count++;
+  });
+  const csv = ['Month,Invoices,Total Billed,Collected,Outstanding'].concat(
+    Object.keys(byMonth).sort().map(ym => {
+      const d = byMonth[ym];
+      return `"${ym}","${d.count}","${d.total}","${d.paid}","${d.total-d.paid}"`;
+    })
+  ).join('\n');
+  UTILS.downloadCSV(csv, `IWY_Revenue_${year||'All'}.csv`);
+}
+
+function printReport() { window.print(); }
+
+init();
+</script>
+</body>
+</html>

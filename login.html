@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IWY Designs ERP - Login</title>
+  <style>
+    :root {
+      --navy: #1a2a4a; --navy-dark: #0f1e36; --gold: #c9a84c; --gold-light: #d4b46a;
+      --white: #ffffff; --light-gray: #f0f2f5; --border: #dde1e9; --danger: #c53030;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--navy-dark); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    
+    .login-bg {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #0f1e36 0%, #1a2a4a 50%, #0f1e36 100%);
+    }
+    
+    .login-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a84c' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .login-card {
+      position: relative; z-index: 1;
+      background: white;
+      border-radius: 16px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+
+    .login-header {
+      background: var(--navy-dark);
+      padding: 36px 40px 28px;
+      text-align: center;
+    }
+
+    .login-header img { height: 80px; width: auto; margin-bottom: 16px; }
+
+    .login-header h1 { color: var(--gold); font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+    .login-header p { color: rgba(255,255,255,0.55); font-size: 12.5px; margin-top: 4px; }
+
+    .login-body { padding: 32px 40px 36px; }
+
+    .login-title { font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+    .login-sub { font-size: 13px; color: #718096; margin-bottom: 24px; }
+
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 12.5px; font-weight: 600; color: var(--navy); margin-bottom: 5px; }
+    
+    .input-wrapper { position: relative; }
+    .input-wrapper svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #a0aec0; pointer-events: none; }
+    
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: 11px 12px 11px 38px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 14px; color: var(--navy); background: var(--light-gray);
+      outline: none; transition: all 0.2s;
+    }
+    input:focus { border-color: var(--navy); background: white; box-shadow: 0 0 0 3px rgba(26,42,74,0.08); }
+    
+    .eye-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #a0aec0; padding: 2px; }
+
+    .remember-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .remember-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--navy); }
+    .remember-row label { font-size: 13px; color: #4a5568; margin: 0; cursor: pointer; }
+
+    .btn-login {
+      width: 100%; padding: 13px;
+      background: var(--navy); color: white;
+      border: none; border-radius: 8px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.3px;
+    }
+    .btn-login:hover { background: #243655; box-shadow: 0 6px 20px rgba(26,42,74,0.3); }
+    .btn-login:active { transform: scale(0.99); }
+
+    .error-msg {
+      background: rgba(197,48,48,0.08); border: 1px solid rgba(197,48,48,0.2);
+      color: var(--danger); padding: 10px 14px; border-radius: 7px;
+      font-size: 13px; margin-bottom: 16px; display: none;
+    }
+
+    .login-footer {
+      background: var(--light-gray);
+      padding: 14px 40px;
+      text-align: center;
+      font-size: 11.5px;
+      color: #a0aec0;
+      border-top: 1px solid var(--border);
+    }
+
+    .gold-bar { height: 4px; background: linear-gradient(90deg, var(--navy), var(--gold), var(--navy)); }
+  </style>
+</head>
+<body>
+  <div class="login-bg"></div>
+
+  <div class="login-card">
+    <div class="gold-bar"></div>
+    <div class="login-header">
+      <img src="" alt="IWY Designs" id="logo-img">
+      <h1>IWY DESIGNS</h1>
+      <p>Enterprise Resource Planning System</p>
+    </div>
+
+    <div class="login-body">
+      <div class="login-title">Welcome Back</div>
+      <div class="login-sub">Sign in to access your ERP dashboard</div>
+
+      <div class="error-msg" id="error-msg"></div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <div class="input-wrapper">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          <input type="text" id="username" placeholder="Enter username" autocomplete="username">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <input type="password" id="password" placeholder="Enter password" autocomplete="current-password">
+          <button class="eye-toggle" onclick="togglePass()" type="button">
+            <svg id="eye-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="remember-row">
+        <input type="checkbox" id="remember" checked>
+        <label for="remember">Remember me</label>
+      </div>
+
+      <button class="btn-login" onclick="handleLogin()">Sign In →</button>
+    </div>
+
+    <div class="login-footer">
+      © 2024 IWY Designs | Powered by IWY Designs ERP v1.0
+    </div>
+  </div>
+
+  <script src="js/store.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/logos.js"></script>
+  <script>
+    // Set logo
+    document.getElementById('logo-img').src = LOGO_WHITE;
+
+    // Redirect if already logged in
+    if (AUTH.isLoggedIn()) window.location.href = 'dashboard.html';
+
+    function togglePass() {
+      const p = document.getElementById('password');
+      p.type = p.type === 'password' ? 'text' : 'password';
+    }
+
+    function handleLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const remember = document.getElementById('remember').checked;
+      const err = document.getElementById('error-msg');
+
+      if (!username || !password) {
+        err.textContent = 'Please enter username and password.';
+        err.style.display = 'block';
+        return;
+      }
+
+      const result = AUTH.login(username, password, remember);
+      if (result.success) {
+        window.location.href = 'dashboard.html';
+      } else {
+        err.textContent = result.error || 'Login failed. Please try again.';
+        err.style.display = 'block';
+        document.getElementById('password').value = '';
+      }
+    }
+
+    // Enter key login
+    ['username', 'password'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleLogin();
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings - IWY Designs ERP</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div id="nav-placeholder"></div>
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Configure your ERP system</p>
+      </div>
+      <button class="btn btn-primary" onclick="saveAllSettings()">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Save All Settings
+      </button>
+    </div>
+
+    <div class="settings-layout">
+      <!-- Settings Tabs -->
+      <div class="settings-sidebar">
+        <button class="settings-tab active" onclick="showSection('company')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          Company Info
+        </button>
+        <button class="settings-tab" onclick="showSection('numbering')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
+          Numbering
+        </button>
+        <button class="settings-tab" onclick="showSection('bank')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          Bank Details
+        </button>
+        <button class="settings-tab" onclick="showSection('terms')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Terms & Footer
+        </button>
+        <button class="settings-tab" onclick="showSection('gst')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          Tax & Currency
+        </button>
+        <button class="settings-tab" onclick="showSection('admin')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          Admin Login
+        </button>
+        <button class="settings-tab" onclick="showSection('integration')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Integration
+        </button>
+        <button class="settings-tab danger-tab" onclick="showSection('data')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Data Management
+        </button>
+      </div>
+
+      <!-- Sections -->
+      <div class="settings-content">
+        <!-- Company Info -->
+        <div class="settings-section active" id="section-company">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Company Information</h3></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Company Name *</label>
+                  <input type="text" class="form-control" id="s-companyName" placeholder="IWY Designs">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Tagline</label>
+                  <input type="text" class="form-control" id="s-tagline" placeholder="Excellence in Interior Design">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <textarea class="form-control" id="s-address" rows="3" placeholder="Full business address"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Phone</label>
+                  <input type="text" class="form-control" id="s-phone" placeholder="+91-XXXXXXXXXX">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email</label>
+                  <input type="email" class="form-control" id="s-email" placeholder="info@iwydesigns.com">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Website</label>
+                  <input type="text" class="form-control" id="s-website" placeholder="www.iwydesigns.com">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">GST Number</label>
+                  <input type="text" class="form-control" id="s-gst" placeholder="GSTIN">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Authorized Signatory Name</label>
+                <input type="text" class="form-control" id="s-authorizedSignatory" placeholder="e.g. Lakshmi Pulaparthi">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Numbering -->
+        <div class="settings-section" id="section-numbering">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Document Numbering</h3></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Quotation Prefix</label>
+                  <input type="text" class="form-control" id="s-quotationPrefix" placeholder="IWY-Q-">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Current Quotation Counter</label>
+                  <input type="number" class="form-control" id="s-quotationCounter" min="1">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Invoice Prefix</label>
+                  <input type="text" class="form-control" id="s-invoicePrefix" placeholder="IWY-INV-">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Current Invoice Counter</label>
+                  <input type="number" class="form-control" id="s-invoiceCounter" min="1">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Default Validity (Days)</label>
+                  <input type="number" class="form-control" id="s-defaultValidity" min="1" max="365">
+                </div>
+              </div>
+              <div class="alert alert-info" style="margin-top:16px">
+                <strong>Note:</strong> Changing the counter will affect the next generated document number. Preview: <span id="qPreview">—</span> / <span id="iPreview">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bank Details -->
+        <div class="settings-section" id="section-bank">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Bank Details</h3></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Bank Name</label>
+                  <input type="text" class="form-control" id="s-bankName" placeholder="Bank name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Account Holder</label>
+                  <input type="text" class="form-control" id="s-accountHolder" placeholder="Account holder name">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Account Number</label>
+                  <input type="text" class="form-control" id="s-accountNo" placeholder="Account number">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">IFSC Code</label>
+                  <input type="text" class="form-control" id="s-ifsc" placeholder="IFSC code">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms & Footer -->
+        <div class="settings-section" id="section-terms">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Terms & Conditions</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Default Terms & Conditions</label>
+                <textarea class="form-control" id="s-defaultTerms" rows="6" placeholder="Enter terms and conditions..."></textarea>
+                <small class="form-hint">These appear on all quotations and invoices by default</small>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Default Payment Terms</label>
+                <textarea class="form-control" id="s-defaultPaymentTerms" rows="4" placeholder="Enter payment terms..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Footer Note</label>
+                <input type="text" class="form-control" id="s-footerNote" placeholder="Thank you message or footer text">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tax & Currency -->
+        <div class="settings-section" id="section-gst">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Tax & Currency</h3></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Default GST %</label>
+                  <input type="number" class="form-control" id="s-defaultGST" min="0" max="100" step="0.5">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Currency Symbol</label>
+                  <select class="form-control" id="s-currency">
+                    <option value="₹">₹ Indian Rupee</option>
+                    <option value="$">$ US Dollar</option>
+                    <option value="€">€ Euro</option>
+                    <option value="£">£ British Pound</option>
+                    <option value="AED">AED Dirham</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Login -->
+        <div class="settings-section" id="section-admin">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Admin Credentials</h3></div>
+            <div class="card-body">
+              <div class="alert alert-warning" style="margin-bottom:20px">
+                <strong>Security Note:</strong> Changing your password will log you out. Default credentials: admin / iwy@2024
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Admin Name</label>
+                  <input type="text" class="form-control" id="s-adminName" placeholder="Full name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Username</label>
+                  <input type="text" class="form-control" id="s-adminUsername">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">New Password</label>
+                  <input type="password" class="form-control" id="s-adminPassword" placeholder="Leave blank to keep current">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Confirm Password</label>
+                  <input type="password" class="form-control" id="s-adminPasswordConfirm" placeholder="Repeat new password">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Integration -->
+        <div class="settings-section" id="section-integration">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Google Sheets Integration</h3></div>
+            <div class="card-body">
+              <div class="alert alert-info" style="margin-bottom:20px">
+                <strong>Optional:</strong> Connect to Google Apps Script to backup data to Google Sheets. Leave blank to use local storage only.
+              </div>
+              <div class="form-group">
+                <label class="form-label">Google Apps Script Web App URL</label>
+                <input type="url" class="form-control" id="s-googleScriptUrl" placeholder="https://script.google.com/macros/s/...">
+                <small class="form-hint">Deploy your Google Apps Script as a Web App and paste the URL here</small>
+              </div>
+              <div style="margin-top:16px">
+                <button class="btn btn-secondary" onclick="testConnection()">Test Connection</button>
+                <span id="connStatus" style="margin-left:12px;font-size:13px"></span>
+              </div>
+              <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--gray-200)">
+                <h4 style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:12px">Apps Script Setup Instructions</h4>
+                <ol style="font-size:13px;color:var(--gray-600);line-height:2;padding-left:20px">
+                  <li>Go to <strong>script.google.com</strong> and create a new project</li>
+                  <li>Paste the code from <code>apps-script/Code.gs</code></li>
+                  <li>Deploy → New Deployment → Web App</li>
+                  <li>Set Execute as: <strong>Me</strong>, Who has access: <strong>Anyone</strong></li>
+                  <li>Copy the Web App URL and paste above</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Management -->
+        <div class="settings-section" id="section-data">
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Data Management</h3></div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:20px">
+                <div class="data-action-card">
+                  <div>
+                    <h4>Export All Data</h4>
+                    <p>Download a complete backup of all customers, quotations, and invoices as JSON</p>
+                  </div>
+                  <button class="btn btn-secondary" onclick="exportData()">Export JSON</button>
+                </div>
+                <div class="data-action-card">
+                  <div>
+                    <h4>Import Data</h4>
+                    <p>Restore data from a previously exported JSON backup file</p>
+                  </div>
+                  <label class="btn btn-secondary" style="cursor:pointer">
+                    Import JSON
+                    <input type="file" accept=".json" onchange="importData(this)" style="display:none">
+                  </label>
+                </div>
+                <div class="data-action-card danger">
+                  <div>
+                    <h4 style="color:#991b1b">Reset All Data</h4>
+                    <p style="color:#7f1d1d">⚠️ This will permanently delete ALL customers, quotations, invoices and reset settings to defaults.</p>
+                  </div>
+                  <button class="btn btn-danger" onclick="resetData()">Reset Everything</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<style>
+.settings-layout { display:flex; gap:24px; align-items:flex-start; }
+.settings-sidebar { width:200px; flex-shrink:0; display:flex; flex-direction:column; gap:4px; position:sticky; top:80px; }
+.settings-tab { display:flex; align-items:center; gap:10px; padding:10px 14px; border:none; background:transparent; color:var(--gray-600); font-size:13px; font-weight:500; cursor:pointer; border-radius:8px; text-align:left; width:100%; transition:all .2s; }
+.settings-tab svg { width:16px; height:16px; flex-shrink:0; }
+.settings-tab:hover { background:var(--gray-100); color:var(--navy); }
+.settings-tab.active { background:rgba(26,42,74,0.08); color:var(--navy); font-weight:600; }
+.settings-tab.danger-tab { color:#991b1b; }
+.settings-tab.danger-tab:hover { background:#fee2e2; }
+.settings-content { flex:1; min-width:0; }
+.settings-section { display:none; }
+.settings-section.active { display:block; }
+.data-action-card { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:16px; border:1px solid var(--gray-200); border-radius:10px; }
+.data-action-card h4 { font-size:14px; font-weight:600; color:var(--navy); margin-bottom:4px; }
+.data-action-card p { font-size:12px; color:var(--gray-500); margin:0; }
+.data-action-card.danger { border-color:#fecaca; background:#fff5f5; }
+.alert { padding:12px 16px; border-radius:8px; font-size:13px; }
+.alert-info { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; }
+.alert-warning { background:#fffbeb; border:1px solid #fde68a; color:#92400e; }
+.btn-danger { background:#dc2626; color:#fff; border:none; }
+.btn-danger:hover { background:#b91c1c; }
+@media (max-width:768px) {
+  .settings-layout { flex-direction:column; }
+  .settings-sidebar { width:100%; position:static; flex-direction:row; flex-wrap:wrap; }
+  .settings-tab { flex:1; min-width:80px; justify-content:center; text-align:center; font-size:11px; flex-direction:column; gap:4px; padding:8px 4px; }
+  .settings-tab svg { width:18px; height:18px; }
+}
+</style>
+
+<script src="js/logos.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/store.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/nav.js"></script>
+<script>
+AUTH.requireLogin();
+document.getElementById('nav-placeholder').innerHTML = buildNav('settings');
+initMobileMenu();
+
+function showSection(id) {
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function loadSettings() {
+  const s = STORE.getSettings();
+  const fields = ['companyName','tagline','address','phone','email','website','gst','authorizedSignatory',
+    'quotationPrefix','invoicePrefix','quotationCounter','invoiceCounter','defaultValidity',
+    'bankName','accountHolder','accountNo','ifsc',
+    'defaultTerms','defaultPaymentTerms','footerNote',
+    'defaultGST','currency',
+    'adminName','adminUsername',
+    'googleScriptUrl'];
+  fields.forEach(f => {
+    const el = document.getElementById('s-' + f);
+    if (el) el.value = s[f] || '';
+  });
+  updatePreviews();
+}
+
+function updatePreviews() {
+  const prefix = document.getElementById('s-quotationPrefix').value || 'IWY-Q-';
+  const counter = parseInt(document.getElementById('s-quotationCounter').value) || 1;
+  document.getElementById('qPreview').textContent = prefix + String(counter).padStart(6, '0');
+
+  const iPrefix = document.getElementById('s-invoicePrefix').value || 'IWY-INV-';
+  const iCounter = parseInt(document.getElementById('s-invoiceCounter').value) || 1;
+  document.getElementById('iPreview').textContent = iPrefix + String(iCounter).padStart(6, '0');
+}
+
+['s-quotationPrefix','s-quotationCounter','s-invoicePrefix','s-invoiceCounter'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', updatePreviews);
+});
+
+function saveAllSettings() {
+  const pw1 = document.getElementById('s-adminPassword').value;
+  const pw2 = document.getElementById('s-adminPasswordConfirm').value;
+  if (pw1 && pw1 !== pw2) {
+    UTILS.showToast('Passwords do not match', 'error');
+    return;
+  }
+
+  const current = STORE.getSettings();
+  const updates = {};
+  const fields = ['companyName','tagline','address','phone','email','website','gst','authorizedSignatory',
+    'quotationPrefix','invoicePrefix','defaultValidity',
+    'bankName','accountHolder','accountNo','ifsc',
+    'defaultTerms','defaultPaymentTerms','footerNote',
+    'defaultGST','currency','adminName','adminUsername','googleScriptUrl'];
+
+  fields.forEach(f => {
+    const el = document.getElementById('s-' + f);
+    if (el) updates[f] = el.type === 'number' ? parseFloat(el.value) || 0 : el.value;
+  });
+
+  // Counter — only update if changed
+  const qc = parseInt(document.getElementById('s-quotationCounter').value);
+  const ic = parseInt(document.getElementById('s-invoiceCounter').value);
+  if (!isNaN(qc)) updates.quotationCounter = qc;
+  if (!isNaN(ic)) updates.invoiceCounter = ic;
+
+  if (pw1) updates.adminPassword = pw1;
+
+  STORE.saveSettings({ ...current, ...updates });
+  document.getElementById('s-adminPassword').value = '';
+  document.getElementById('s-adminPasswordConfirm').value = '';
+  UTILS.showToast('Settings saved successfully', 'success');
+}
+
+async function testConnection() {
+  const url = document.getElementById('s-googleScriptUrl').value.trim();
+  const status = document.getElementById('connStatus');
+  if (!url) { status.textContent = '⚠️ No URL entered'; status.style.color = '#92400e'; return; }
+  status.textContent = 'Testing...'; status.style.color = 'var(--gray-500)';
+  try {
+    const res = await fetch(url + '?action=ping', { mode: 'no-cors' });
+    status.textContent = '✅ Connection successful';
+    status.style.color = '#065f46';
+  } catch (e) {
+    status.textContent = '❌ Connection failed: ' + e.message;
+    status.style.color = '#991b1b';
+  }
+}
+
+function exportData() {
+  const data = {
+    exportDate: new Date().toISOString(),
+    version: '1.0',
+    customers: STORE.getAllCustomers(),
+    quotations: STORE.getAllQuotations(),
+    invoices: STORE.getAllInvoices(),
+    settings: STORE.getSettings()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'IWY_ERP_Backup_' + new Date().toISOString().substring(0,10) + '.json';
+  a.click();
+  UTILS.showToast('Data exported successfully', 'success');
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.customers && !data.quotations && !data.invoices) {
+        UTILS.showToast('Invalid backup file', 'error');
+        return;
+      }
+      if (!confirm(`Import data from ${file.name}?\n\nThis will MERGE with existing data. Continue?`)) return;
+      if (data.customers) data.customers.forEach(c => STORE.saveCustomer(c));
+      if (data.quotations) data.quotations.forEach(q => {
+        const list = STORE.getAllQuotations();
+        if (!list.find(x => x.id === q.id)) { list.push(q); localStorage.setItem('iwy_quotations', JSON.stringify(list)); }
+      });
+      if (data.invoices) data.invoices.forEach(inv => {
+        const list = STORE.getAllInvoices();
+        if (!list.find(x => x.id === inv.id)) { list.push(inv); localStorage.setItem('iwy_invoices', JSON.stringify(list)); }
+      });
+      UTILS.showToast('Data imported successfully', 'success');
+    } catch (err) {
+      UTILS.showToast('Failed to parse file: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function resetData() {
+  if (!confirm('⚠️ DANGER: This will permanently delete ALL data including customers, quotations, and invoices.\n\nType "RESET" to confirm.')) return;
+  const confirm2 = prompt('Type RESET to confirm:');
+  if (confirm2 !== 'RESET') { UTILS.showToast('Reset cancelled', 'info'); return; }
+  ['iwy_customers','iwy_quotations','iwy_invoices','iwy_settings','iwy_activity'].forEach(k => localStorage.removeItem(k));
+  UTILS.showToast('All data has been reset', 'success');
+  setTimeout(() => { loadSettings(); }, 500);
+}
+
+loadSettings();
+</script>
+</body>
+</html>

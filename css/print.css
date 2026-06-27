@@ -1,0 +1,374 @@
+/* ===== IWY DESIGNS - PRINT/PDF STYLES ===== */
+
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: white !important; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+  .sidebar, .topbar, .page-header, .page-actions, .btn, .no-print, .modal-overlay:not(.print-modal) { display: none !important; }
+  .main-content { margin-left: 0 !important; }
+  .page-content { padding: 0 !important; }
+}
+
+/* PDF Document Styles */
+.pdf-doc {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 0;
+  background: white;
+  position: relative;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 9pt;
+  color: #1a2a4a;
+  margin: 0 auto;
+}
+
+/* ===== PDF HEADER ===== */
+.pdf-header {
+  background: #1a2a4a;
+  padding: 14px 20px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+}
+
+.pdf-logo img {
+  height: 62px;
+  width: auto;
+}
+
+.pdf-company-info {
+  text-align: right;
+  color: white;
+}
+
+.pdf-company-info h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #c9a84c;
+  letter-spacing: 1px;
+}
+
+.pdf-company-info p {
+  font-size: 8pt;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+/* ===== DOC TYPE BANNER ===== */
+.pdf-doc-type-banner {
+  background: #c9a84c;
+  padding: 8px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pdf-doc-type {
+  font-size: 15pt;
+  font-weight: 700;
+  color: #1a2a4a;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.pdf-doc-meta {
+  text-align: right;
+  font-size: 9pt;
+  color: #1a2a4a;
+  font-weight: 600;
+}
+
+.pdf-doc-meta strong {
+  font-size: 12pt;
+  display: block;
+  color: #0f1e36;
+}
+
+/* ===== PDF BODY ===== */
+.pdf-body {
+  padding: 14px 20px;
+}
+
+/* ===== CLIENT + PROJECT INFO ===== */
+.pdf-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pdf-info-box {
+  border: 1px solid #dde1e9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pdf-info-box-header {
+  background: #1a2a4a;
+  color: white;
+  padding: 5px 12px;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.pdf-info-box-body {
+  padding: 8px 12px;
+  font-size: 9pt;
+  line-height: 1.6;
+  color: #1a2a4a;
+}
+
+.pdf-info-box-body strong {
+  font-size: 11pt;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ===== WATERMARK ===== */
+.pdf-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-35deg);
+  font-size: 80pt;
+  font-weight: 900;
+  color: rgba(201,168,76,0.05);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  font-family: Arial, sans-serif;
+}
+
+/* ===== ITEMS TABLE ===== */
+.pdf-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.pdf-items-table thead tr {
+  background: #1a2a4a;
+  color: white;
+}
+
+.pdf-items-table th {
+  padding: 8px 10px;
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pdf-items-table th.right { text-align: right; }
+.pdf-items-table th.center { text-align: center; }
+
+.pdf-items-table td {
+  padding: 7px 10px;
+  font-size: 9pt;
+  border-bottom: 1px solid #e8e8e8;
+  color: #1a2a4a;
+  vertical-align: top;
+}
+
+.pdf-items-table td.right { text-align: right; }
+.pdf-items-table td.center { text-align: center; }
+
+.pdf-items-table tbody tr:nth-child(even) { background: rgba(248,246,240,0.6); }
+
+.pdf-items-table tfoot td {
+  padding: 6px 10px;
+  font-size: 9pt;
+  color: #1a2a4a;
+}
+
+.pdf-items-table .sno-cell {
+  color: #c9a84c;
+  font-weight: 700;
+  font-size: 8pt;
+}
+
+/* ===== TOTALS ===== */
+.pdf-totals-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.pdf-totals-box {
+  width: 240px;
+  border: 1px solid #dde1e9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pdf-totals-box table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pdf-totals-box td {
+  padding: 6px 12px;
+  font-size: 9pt;
+  border-bottom: 1px solid #eee;
+}
+
+.pdf-totals-box td:last-child { text-align: right; font-weight: 600; }
+
+.pdf-totals-box .grand-total-row td {
+  background: #1a2a4a;
+  color: white;
+  font-size: 10.5pt;
+  font-weight: 700;
+  border: none;
+}
+
+/* ===== AMOUNT IN WORDS ===== */
+.pdf-amount-words {
+  background: rgba(201,168,76,0.08);
+  border: 1px dashed #c9a84c;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 9pt;
+  color: #1a2a4a;
+  font-style: italic;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.pdf-amount-words span {
+  font-weight: 700;
+  font-style: normal;
+  color: #0f1e36;
+}
+
+/* ===== PAYMENT SECTION ===== */
+.pdf-payment {
+  background: rgba(26,42,74,0.04);
+  border: 1px solid #dde1e9;
+  border-left: 4px solid #c9a84c;
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-size: 8.5pt;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.pdf-payment strong {
+  font-size: 9pt;
+  color: #1a2a4a;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ===== TERMS ===== */
+.pdf-terms {
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.pdf-terms-title {
+  font-size: 9pt;
+  font-weight: 700;
+  color: #1a2a4a;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-terms-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #c9a84c;
+}
+
+.pdf-terms ol {
+  padding-left: 16px;
+  margin: 0;
+}
+
+.pdf-terms li {
+  font-size: 8pt;
+  color: #4a5568;
+  line-height: 1.5;
+  margin-bottom: 2px;
+}
+
+/* ===== SIGNATURE SECTION ===== */
+.pdf-signature {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 12px 0 0;
+  margin-bottom: 14px;
+  border-top: 1px solid #dde1e9;
+  position: relative;
+  z-index: 1;
+}
+
+.pdf-sig-box {
+  text-align: center;
+  min-width: 130px;
+}
+
+.pdf-sig-line {
+  width: 130px;
+  height: 1px;
+  background: #1a2a4a;
+  margin: 28px auto 4px;
+}
+
+.pdf-sig-box p {
+  font-size: 8pt;
+  color: #4a5568;
+}
+
+.pdf-sig-box strong {
+  font-size: 9pt;
+  color: #1a2a4a;
+  display: block;
+}
+
+/* ===== PDF FOOTER ===== */
+.pdf-footer {
+  background: #1a2a4a;
+  padding: 8px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.pdf-footer p {
+  font-size: 7.5pt;
+  color: rgba(255,255,255,0.65);
+}
+
+.pdf-footer .gold-text { color: #c9a84c; }
+
+/* ===== PREVIEW AREA ===== */
+.pdf-preview-wrapper {
+  background: #555;
+  padding: 20px;
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: auto;
+  max-height: 80vh;
+}
+
+.pdf-preview-doc {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}

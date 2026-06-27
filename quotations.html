@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quotations - IWY Designs ERP</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/print.css">
+  <style>
+    .items-section { overflow-x: auto; }
+    .drag-handle { cursor: grab; color: var(--text-light); }
+    .drag-handle:active { cursor: grabbing; }
+    .item-row.dragging { opacity: 0.5; }
+    .item-row.drag-over { border-top: 2px solid var(--gold); }
+    .unit-presets { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+    .unit-preset { padding: 2px 8px; background: var(--light-gray); border: 1px solid var(--border); border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.15s; }
+    .unit-preset:hover { background: var(--navy); color: white; }
+    .quot-form-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 768px) { .quot-form-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="nav-container"></div>
+  <div class="main-content">
+    <div id="topbar-container"></div>
+    <div class="page-content">
+
+      <!-- LIST VIEW -->
+      <div id="list-view">
+        <div class="page-header">
+          <div><h1>Quotations</h1><p>Create and manage project quotations</p></div>
+          <div class="page-actions">
+            <button class="btn btn-outline" onclick="exportQuotations()">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Export CSV
+            </button>
+            <button class="btn btn-gold" onclick="showForm('new')">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              New Quotation
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="topbar-search" style="flex:1;max-width:380px;">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="search-input" placeholder="Search by number, customer, project..." oninput="filterList()">
+          </div>
+          <select id="status-filter" onchange="filterList()" style="width:140px;">
+            <option value="">All Status</option>
+            <option>Draft</option><option>Sent</option><option>Approved</option>
+            <option>Rejected</option><option>Invoiced</option><option>Expired</option>
+          </select>
+          <span id="result-count" style="font-size:12px;color:var(--text-light);white-space:nowrap;"></span>
+        </div>
+
+        <div class="card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr><th>Quot #</th><th>Customer</th><th>Project</th><th>Date</th><th>Valid Until</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="list-tbody"></tbody>
+            </table>
+          </div>
+          <div style="padding:12px 16px;border-top:1px solid var(--border);">
+            <div id="pagination" class="pagination"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM VIEW -->
+      <div id="form-view" style="display:none;">
+
+        <div class="page-header">
+          <div>
+            <h1 id="form-title">New Quotation</h1>
+            <p id="form-subtitle">Fill in the details below</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-outline" onclick="showList()">← Back to List</button>
+            <button class="btn btn-outline" onclick="saveQuotation('draft')">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+              Save Draft
+            </button>
+            <button class="btn btn-gold" onclick="saveQuotation('save')">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Save & Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- HEADER INFO -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><div class="card-title">Quotation Details</div><div id="quot-number-badge" style="font-size:13px;font-weight:600;color:var(--gold-dark);"></div></div>
+          <div class="card-body">
+            <input type="hidden" id="q-id">
+            <div class="quot-form-layout">
+              <div class="form-group">
+                <label>Customer <span class="req">*</span></label>
+                <select id="q-customer" onchange="onCustomerChange()">
+                  <option value="">-- Select Customer --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Project Name <span class="req">*</span></label>
+                <input type="text" id="q-project" placeholder="e.g. Office Interior - Madhapur">
+              </div>
+              <div class="form-group">
+                <label>Quotation Date <span class="req">*</span></label>
+                <input type="date" id="q-date">
+              </div>
+              <div class="form-group">
+                <label>Valid Until</label>
+                <input type="date" id="q-validity">
+              </div>
+              <div class="form-group full-width">
+                <label>Site / Delivery Address</label>
+                <input type="text" id="q-site" placeholder="Site or project address">
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select id="q-status">
+                  <option>Draft</option><option>Sent</option><option>Approved</option>
+                  <option>Rejected</option><option>Expired</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Discount (%)</label>
+                <input type="number" id="q-discount" value="0" min="0" max="100" step="0.5" oninput="recalcTotals()">
+              </div>
+              <div class="form-group">
+                <label>GST (%)</label>
+                <input type="number" id="q-gst" value="18" min="0" max="28" step="0.5" oninput="recalcTotals()">
+              </div>
+              <div class="form-group full-width">
+                <label>Remarks / Notes</label>
+                <textarea id="q-remarks" rows="2" placeholder="Additional notes for the client..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ITEMS TABLE -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">
+            <div class="card-title">Line Items</div>
+            <div style="display:flex;gap:8px;">
+              <div class="unit-presets" style="align-items:center;">
+                <span style="font-size:11px;color:var(--text-light);">Quick units:</span>
+                <span class="unit-preset" onclick="setNextUnit('SFT')">SFT</span>
+                <span class="unit-preset" onclick="setNextUnit('SQFT')">SQFT</span>
+                <span class="unit-preset" onclick="setNextUnit('RFT')">RFT</span>
+                <span class="unit-preset" onclick="setNextUnit('MTR')">MTR</span>
+                <span class="unit-preset" onclick="setNextUnit('NOS')">NOS</span>
+                <span class="unit-preset" onclick="setNextUnit('KG')">KG</span>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="addItemRow()">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Row
+              </button>
+            </div>
+          </div>
+          <div class="items-section">
+            <table class="items-table" id="items-table" style="min-width:780px;">
+              <thead>
+                <tr>
+                  <th style="width:28px;"></th>
+                  <th style="width:28px;color:var(--gold);">#</th>
+                  <th>Description</th>
+                  <th style="width:110px;">Measurement</th>
+                  <th style="width:80px;">Unit</th>
+                  <th style="width:70px;">Qty</th>
+                  <th style="width:110px;">Unit Price (₹)</th>
+                  <th style="width:110px;">Amount (₹)</th>
+                  <th style="width:70px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="items-tbody"></tbody>
+            </table>
+          </div>
+          <div style="padding:12px 16px;border-top:1px solid var(--border);">
+            <button class="btn btn-outline btn-sm" onclick="addItemRow()">+ Add Row</button>
+          </div>
+        </div>
+
+        <!-- TOTALS -->
+        <div style="display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;">
+          <div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Terms & Conditions</div></div>
+              <div class="card-body">
+                <textarea id="q-terms" rows="5" placeholder="Terms and conditions..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="totals-section" style="min-width:300px;">
+              <div class="total-row"><span>Sub Total</span><span class="amount" id="t-subtotal">₹ 0.00</span></div>
+              <div class="total-row" id="discount-row" style="color:var(--danger);"><span>Discount (<span id="t-disc-pct">0</span>%)</span><span class="amount" id="t-discount">- ₹ 0.00</span></div>
+              <div class="total-row" id="gst-row"><span>GST (<span id="t-gst-pct">18</span>%)</span><span class="amount" id="t-gst">₹ 0.00</span></div>
+              <div class="total-row" id="round-row"><span>Round Off</span><span class="amount" id="t-round">₹ 0.00</span></div>
+              <div class="total-row main"><span>Grand Total</span><span id="t-grand">₹ 0.00</span></div>
+            </div>
+            <div class="amount-words" id="amount-words-box">Amount in Words: Zero Rupees Only</div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+          <button class="btn btn-outline" onclick="showList()">Cancel</button>
+          <button class="btn btn-outline" onclick="saveQuotation('draft')">Save Draft</button>
+          <button class="btn btn-primary" onclick="previewQuotation()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Preview
+          </button>
+          <button class="btn btn-gold" onclick="saveQuotation('save')">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Save Quotation
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PDF PREVIEW MODAL -->
+<div class="modal-overlay" id="pdf-preview-modal">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <h2>Quotation Preview</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-outline btn-sm" onclick="printCurrentDoc()">🖨 Print</button>
+        <button class="btn btn-gold btn-sm" onclick="downloadCurrentDoc()">⬇ Download PDF</button>
+        <button class="modal-close" onclick="UTILS.closeModal('pdf-preview-modal')">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pdf-preview-wrapper">
+      <div id="pdf-preview-content" class="pdf-preview-doc"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM CONVERT TO INVOICE -->
+<div class="modal-overlay" id="convert-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>Convert to Invoice</h2>
+      <button class="modal-close" onclick="UTILS.closeModal('convert-modal')"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="color:#4a5568;font-size:14px;margin-bottom:12px;">Convert this quotation to an invoice?</p>
+      <div class="form-group">
+        <label>Invoice Date</label>
+        <input type="date" id="convert-date">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UTILS.closeModal('convert-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="confirmConvert()">Convert to Invoice</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<div class="modal-overlay" id="confirm-modal"><div class="modal modal-sm"><div class="modal-header"><h2 id="confirm-title">Confirm</h2><button class="modal-close" onclick="UTILS.closeModal('confirm-modal')"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><div class="modal-body"><p id="confirm-msg" style="color:#4a5568;font-size:14px;"></p></div><div class="modal-footer"><button class="btn btn-outline" id="confirm-no">Cancel</button><button class="btn btn-danger" id="confirm-yes">Confirm</button></div></div></div>
+
+<script src="js/logos.js"></script>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/pdf.js"></script>
+
+<script>
+  AUTH.requireAuth();
+  document.getElementById('nav-container').innerHTML = buildNav('quotations');
+  document.getElementById('topbar-container').innerHTML = buildTopBar('Quotations', 'Create and manage project quotations');
+
+  let allData = [], filteredData = [], currentPage = 1, PER_PAGE = 10;
+  let itemCount = 0;
+  let currentDocData = null;
+  let convertQuotId = null;
+
+  // ===== LIST VIEW =====
+  function showList() {
+    document.getElementById('list-view').style.display = 'block';
+    document.getElementById('form-view').style.display = 'none';
+    loadList();
+  }
+
+  function loadList() {
+    allData = STORE.getQuotations().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    filterList();
+  }
+
+  function filterList() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    const status = document.getElementById('status-filter').value;
+    filteredData = allData.filter(item => {
+      const mS = !status || item.status === status;
+      const mQ = !q || (item.quotationNumber || '').toLowerCase().includes(q) ||
+        (item.customerName || '').toLowerCase().includes(q) ||
+        (item.projectName || '').toLowerCase().includes(q) ||
+        (item.customerPhone || '').includes(q);
+      return mS && mQ;
+    });
+    currentPage = 1;
+    renderList();
+  }
+
+  function renderList() {
+    const sym = STORE.getSettings().currency || '₹';
+    document.getElementById('result-count').textContent = `${filteredData.length} quotation${filteredData.length !== 1 ? 's' : ''}`;
+    const start = (currentPage - 1) * PER_PAGE;
+    const page = filteredData.slice(start, start + PER_PAGE);
+    const tbody = document.getElementById('list-tbody');
+    if (page.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><p>No quotations found</p><span>Create your first quotation</span></div></td></tr>`;
+    } else {
+      tbody.innerHTML = page.map(q => `<tr>
+        <td><a href="#" onclick="viewQuotation('${q.id}');return false;" style="color:var(--navy);font-weight:700;">${UTILS.esc(q.quotationNumber)}</a></td>
+        <td><div style="font-weight:500;">${UTILS.esc(q.customerName || '-')}</div><div style="font-size:11px;color:var(--text-light);">${UTILS.esc(q.customerPhone || '')}</div></td>
+        <td>${UTILS.esc(q.projectName || '-')}</td>
+        <td>${UTILS.formatDate(q.quotationDate || q.date || q.createdAt)}</td>
+        <td>${q.validUntil ? UTILS.formatDate(q.validUntil) : '-'}</td>
+        <td style="font-weight:600;">${sym} ${UTILS.formatNum(q.grandTotal)}</td>
+        <td>${UTILS.statusBadge(q.status)}</td>
+        <td>
+          <div style="display:flex;gap:3px;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-xs" onclick="viewQuotation('${q.id}')" title="View">👁</button>
+            <button class="btn btn-outline btn-xs" onclick="showForm('edit','${q.id}')" title="Edit">✏️</button>
+            <button class="btn btn-outline btn-xs" onclick="duplicateQuotation('${q.id}')" title="Duplicate">📋</button>
+            ${q.status !== 'Invoiced' ? `<button class="btn btn-xs" style="background:var(--gold);color:var(--navy-dark);" onclick="openConvert('${q.id}')" title="Convert to Invoice">→ Invoice</button>` : '<span class="badge badge-navy">Invoiced</span>'}
+            <button class="btn btn-outline btn-xs" onclick="deleteQuotation('${q.id}')" title="Delete" style="color:var(--danger);">🗑</button>
+          </div>
+        </td>
+      </tr>`).join('');
+    }
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const total = Math.ceil(filteredData.length / PER_PAGE);
+    const p = document.getElementById('pagination');
+    if (total <= 1) { p.innerHTML = ''; return; }
+    let html = `<button onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    for (let i = 1; i <= total; i++) {
+      if (i===1||i===total||Math.abs(i-currentPage)<=1) html += `<button class="${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+      else if (Math.abs(i-currentPage)===2) html += '<button disabled>...</button>';
+    }
+    html += `<button onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
+    p.innerHTML = html;
+  }
+  function goPage(p) { const t=Math.ceil(filteredData.length/PER_PAGE); if(p<1||p>t)return; currentPage=p; renderList(); }
+
+  // ===== FORM VIEW =====
+  function showForm(mode, id) {
+    document.getElementById('list-view').style.display = 'none';
+    document.getElementById('form-view').style.display = 'block';
+    const s = STORE.getSettings();
+
+    // Load customers into dropdown
+    const customers = STORE.getCustomers();
+    const sel = document.getElementById('q-customer');
+    sel.innerHTML = '<option value="">-- Select Customer --</option>' +
+      customers.map(c => `<option value="${c.id}">${UTILS.esc(c.name)}${c.company ? ' - ' + UTILS.esc(c.company) : ''}</option>`).join('');
+
+    if (mode === 'new') {
+      document.getElementById('form-title').textContent = 'New Quotation';
+      document.getElementById('form-subtitle').textContent = 'Create a new project quotation';
+      document.getElementById('q-id').value = '';
+      document.getElementById('q-date').value = UTILS.todayISO();
+      document.getElementById('q-validity').value = UTILS.validityDate(s.defaultValidity || 30);
+      document.getElementById('q-project').value = '';
+      document.getElementById('q-site').value = '';
+      document.getElementById('q-discount').value = '0';
+      document.getElementById('q-gst').value = s.defaultGST || 18;
+      document.getElementById('q-remarks').value = '';
+      document.getElementById('q-terms').value = s.defaultTerms || '';
+      document.getElementById('q-status').value = 'Draft';
+      document.getElementById('quot-number-badge').textContent = 'New (auto-numbered on save)';
+
+      // Pre-select customer from URL
+      const cid = new URLSearchParams(location.search).get('customer');
+      if (cid) sel.value = cid;
+
+      clearItems();
+      addItemRow();
+      recalcTotals();
+    } else if (mode === 'edit' && id) {
+      const q = STORE.getQuotation(id);
+      if (!q) { showList(); return; }
+      document.getElementById('form-title').textContent = 'Edit Quotation';
+      document.getElementById('form-subtitle').textContent = q.quotationNumber;
+      document.getElementById('q-id').value = q.id;
+      document.getElementById('q-customer').value = q.customerId || '';
+      document.getElementById('q-project').value = q.projectName || '';
+      document.getElementById('q-date').value = UTILS.toDateInput(q.quotationDate || q.date || q.createdAt);
+      document.getElementById('q-validity').value = UTILS.toDateInput(q.validUntil);
+      document.getElementById('q-site').value = q.siteAddress || '';
+      document.getElementById('q-discount').value = q.discountPct || 0;
+      document.getElementById('q-gst').value = q.gstPct ?? (s.defaultGST || 18);
+      document.getElementById('q-remarks').value = q.remarks || '';
+      document.getElementById('q-terms').value = q.terms || s.defaultTerms || '';
+      document.getElementById('q-status').value = q.status || 'Draft';
+      document.getElementById('quot-number-badge').textContent = q.quotationNumber;
+
+      clearItems();
+      (q.items || []).forEach(item => addItemRow(item));
+      if ((q.items || []).length === 0) addItemRow();
+      recalcTotals();
+    }
+  }
+
+  // ===== ITEMS =====
+  function clearItems() {
+    document.getElementById('items-tbody').innerHTML = '';
+    itemCount = 0;
+  }
+
+  function addItemRow(data) {
+    itemCount++;
+    const n = itemCount;
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    tr.dataset.row = n;
+    tr.draggable = true;
+    tr.innerHTML = `
+      <td class="drag-handle" title="Drag to reorder">⠿</td>
+      <td style="color:var(--gold);font-weight:700;font-size:12px;" class="row-num">${n}</td>
+      <td><input type="text" class="desc" placeholder="Description of work..." value="${UTILS.esc(data?.description || '')}" oninput=""></td>
+      <td><input type="text" class="meas" placeholder="e.g. 10 x 12" value="${UTILS.esc(data?.measurement || '')}"></td>
+      <td><input type="text" class="unit" placeholder="SFT" value="${UTILS.esc(data?.unit || '')}" style="width:100%;"></td>
+      <td><input type="number" class="qty" placeholder="0" value="${data?.qty || ''}" min="0" step="any" oninput="calcRowAmount(this)"></td>
+      <td><input type="number" class="price" placeholder="0.00" value="${data?.unitPrice || ''}" min="0" step="0.01" oninput="calcRowAmount(this)"></td>
+      <td><input type="number" class="amount" readonly value="${data?.amount || ''}" style="background:var(--off-white);font-weight:600;"></td>
+      <td>
+        <div class="row-actions">
+          <button class="dup" onclick="duplicateRow(this)" title="Duplicate row">📋</button>
+          <button class="del" onclick="deleteRow(this)" title="Delete row">🗑</button>
+        </div>
+      </td>`;
+    document.getElementById('items-tbody').appendChild(tr);
+    setupDragDrop(tr);
+    if (data?.amount) recalcTotals();
+  }
+
+  function calcRowAmount(input) {
+    const row = input.closest('tr');
+    const qty = parseFloat(row.querySelector('.qty').value) || 0;
+    const price = parseFloat(row.querySelector('.price').value) || 0;
+    row.querySelector('.amount').value = (qty * price).toFixed(2);
+    recalcTotals();
+  }
+
+  function deleteRow(btn) {
+    btn.closest('tr').remove();
+    renumberRows();
+    recalcTotals();
+  }
+
+  function duplicateRow(btn) {
+    const row = btn.closest('tr');
+    const data = {
+      description: row.querySelector('.desc').value,
+      measurement: row.querySelector('.meas').value,
+      unit: row.querySelector('.unit').value,
+      qty: row.querySelector('.qty').value,
+      unitPrice: row.querySelector('.price').value,
+      amount: row.querySelector('.amount').value
+    };
+    addItemRow(data);
+  }
+
+  function renumberRows() {
+    document.querySelectorAll('#items-tbody .item-row').forEach((tr, i) => {
+      tr.querySelector('.row-num').textContent = i + 1;
+    });
+  }
+
+  function setNextUnit(unit) {
+    const rows = document.querySelectorAll('#items-tbody .unit');
+    if (rows.length > 0) rows[rows.length - 1].value = unit;
+  }
+
+  // Drag & Drop row reorder
+  let dragSrc = null;
+  function setupDragDrop(tr) {
+    tr.addEventListener('dragstart', e => { dragSrc = tr; tr.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    tr.addEventListener('dragend', () => { tr.classList.remove('dragging'); document.querySelectorAll('.item-row').forEach(r => r.classList.remove('drag-over')); });
+    tr.addEventListener('dragover', e => { e.preventDefault(); tr.classList.add('drag-over'); return false; });
+    tr.addEventListener('dragleave', () => tr.classList.remove('drag-over'));
+    tr.addEventListener('drop', e => {
+      e.stopPropagation(); e.preventDefault();
+      if (dragSrc !== tr) {
+        const tbody = document.getElementById('items-tbody');
+        const rows = [...tbody.querySelectorAll('.item-row')];
+        const srcIdx = rows.indexOf(dragSrc);
+        const tgtIdx = rows.indexOf(tr);
+        if (srcIdx < tgtIdx) tbody.insertBefore(dragSrc, tr.nextSibling);
+        else tbody.insertBefore(dragSrc, tr);
+        renumberRows();
+      }
+    });
+  }
+
+  function getItems() {
+    return [...document.querySelectorAll('#items-tbody .item-row')].map(tr => ({
+      description: tr.querySelector('.desc').value.trim(),
+      measurement: tr.querySelector('.meas').value.trim(),
+      unit: tr.querySelector('.unit').value.trim(),
+      qty: parseFloat(tr.querySelector('.qty').value) || 0,
+      unitPrice: parseFloat(tr.querySelector('.price').value) || 0,
+      amount: parseFloat(tr.querySelector('.amount').value) || 0
+    })).filter(i => i.description || i.amount);
+  }
+
+  function recalcTotals() {
+    const items = [...document.querySelectorAll('#items-tbody .item-row')].map(tr => ({
+      amount: parseFloat(tr.querySelector('.amount').value) || 0
+    }));
+    const discPct = parseFloat(document.getElementById('q-discount').value) || 0;
+    const gstPct = parseFloat(document.getElementById('q-gst').value) || 0;
+    const t = UTILS.calcTotals(items, discPct, gstPct);
+    const sym = STORE.getSettings().currency || '₹';
+
+    document.getElementById('t-subtotal').textContent = `${sym} ${UTILS.formatNum(t.subtotal)}`;
+    document.getElementById('t-disc-pct').textContent = discPct;
+    document.getElementById('t-discount').textContent = `- ${sym} ${UTILS.formatNum(t.discountAmt)}`;
+    document.getElementById('discount-row').style.display = t.discountAmt > 0 ? 'flex' : 'none';
+    document.getElementById('t-gst-pct').textContent = gstPct;
+    document.getElementById('t-gst').textContent = `${sym} ${UTILS.formatNum(t.gstAmt)}`;
+    document.getElementById('gst-row').style.display = t.gstAmt > 0 ? 'flex' : 'none';
+    document.getElementById('t-round').textContent = (t.roundOff >= 0 ? '+' : '') + UTILS.formatNum(t.roundOff);
+    document.getElementById('round-row').style.display = t.roundOff !== 0 ? 'flex' : 'none';
+    document.getElementById('t-grand').textContent = `${sym} ${UTILS.formatNum(t.grandTotal)}`;
+    document.getElementById('amount-words-box').innerHTML = 'Amount in Words: <strong>' + UTILS.amountInWords(t.grandTotal) + '</strong>';
+  }
+
+  // ===== SAVE =====
+  function saveQuotation(mode) {
+    const customerId = document.getElementById('q-customer').value;
+    const projectName = document.getElementById('q-project').value.trim();
+    if (!customerId) { UTILS.toast('Please select a customer', 'error'); return; }
+    if (!projectName) { UTILS.toast('Please enter a project name', 'error'); return; }
+
+    const customer = STORE.getCustomer(customerId);
+    const items = getItems();
+    const discPct = parseFloat(document.getElementById('q-discount').value) || 0;
+    const gstPct = parseFloat(document.getElementById('q-gst').value) || 0;
+    const totals = UTILS.calcTotals(items, discPct, gstPct);
+    const existingId = document.getElementById('q-id').value;
+
+    const data = {
+      id: existingId || undefined,
+      customerId,
+      customerName: customer?.name || '',
+      customerCompany: customer?.company || '',
+      customerPhone: customer?.phone || '',
+      customerEmail: customer?.email || '',
+      customerAddress: customer?.address || '',
+      customerGst: customer?.gst || '',
+      projectName,
+      quotationDate: document.getElementById('q-date').value,
+      validUntil: document.getElementById('q-validity').value,
+      siteAddress: document.getElementById('q-site').value.trim(),
+      discountPct: discPct,
+      gstPct,
+      remarks: document.getElementById('q-remarks').value.trim(),
+      terms: document.getElementById('q-terms').value.trim(),
+      status: document.getElementById('q-status').value,
+      items,
+      ...totals
+    };
+
+    const id = STORE.saveQuotation(data);
+    currentDocData = STORE.getQuotation(id);
+    UTILS.toast('Quotation saved successfully!', 'success');
+
+    if (mode === 'save') {
+      previewQuotation();
+    } else {
+      showList();
+    }
+  }
+
+  function previewQuotation() {
+    if (currentDocData) {
+      PDF.preview(currentDocData, 'quotation');
+    } else {
+      // Try to build from current form
+      const customerId = document.getElementById('q-customer').value;
+      if (!customerId) { UTILS.toast('Save first to preview', 'info'); return; }
+      saveQuotation('draft');
+    }
+  }
+
+  function viewQuotation(id) {
+    const q = STORE.getQuotation(id);
+    currentDocData = q;
+    PDF.preview(q, 'quotation');
+
+    // Add action buttons to preview modal header
+    setTimeout(() => {
+      const header = document.querySelector('#pdf-preview-modal .modal-header div');
+      if (header && !document.getElementById('preview-convert-btn')) {
+        const btn = document.createElement('button');
+        btn.id = 'preview-convert-btn';
+        btn.className = 'btn btn-outline btn-sm';
+        btn.textContent = '→ Invoice';
+        btn.onclick = () => { UTILS.closeModal('pdf-preview-modal'); openConvert(id); };
+        header.insertBefore(btn, header.children[0]);
+      }
+    }, 50);
+  }
+
+  function printCurrentDoc() { if (currentDocData) PDF.print(currentDocData, 'quotation'); }
+  function downloadCurrentDoc() { if (currentDocData) PDF.download(currentDocData, 'quotation'); }
+
+  function duplicateQuotation(id) {
+    const q = STORE.getQuotation(id);
+    if (!q) return;
+    const copy = { ...q, id: undefined, quotationNumber: undefined, status: 'Draft', createdAt: undefined, updatedAt: undefined };
+    STORE.saveQuotation(copy);
+    UTILS.toast('Quotation duplicated!', 'success');
+    loadList();
+  }
+
+  async function deleteQuotation(id) {
+    const q = STORE.getQuotation(id);
+    const confirmed = await UTILS.confirm(`Delete quotation "${q?.quotationNumber}"?`, 'Delete Quotation');
+    if (!confirmed) return;
+    STORE.deleteQuotation(id);
+    UTILS.toast('Quotation deleted', 'success');
+    loadList();
+  }
+
+  // ===== CONVERT TO INVOICE =====
+  function openConvert(id) {
+    convertQuotId = id;
+    document.getElementById('convert-date').value = UTILS.todayISO();
+    UTILS.openModal('convert-modal');
+  }
+
+  function confirmConvert() {
+    const q = STORE.getQuotation(convertQuotId);
+    if (!q) return;
+    const invoiceDate = document.getElementById('convert-date').value;
+    const invoice = {
+      ...q,
+      id: undefined,
+      invoiceNumber: undefined,
+      invoiceDate,
+      quotationId: q.id,
+      quotationNumber: q.quotationNumber,
+      status: 'Unpaid'
+    };
+    const invId = STORE.saveInvoice(invoice);
+    UTILS.closeModal('convert-modal');
+    UTILS.toast('Invoice created! Redirecting...', 'success');
+    setTimeout(() => window.location.href = `invoices.html?view=${invId}`, 1000);
+  }
+
+  function onCustomerChange() {
+    const id = document.getElementById('q-customer').value;
+    const c = STORE.getCustomer(id);
+    if (c && c.address) document.getElementById('q-site').value = c.address;
+  }
+
+  // URL params
+  const params = new URLSearchParams(location.search);
+  if (params.get('new') === '1') {
+    showForm('new');
+  } else if (params.get('view')) {
+    showList();
+    viewQuotation(params.get('view'));
+  } else {
+    showList();
+  }
+</script>
+</body>
+</html>
