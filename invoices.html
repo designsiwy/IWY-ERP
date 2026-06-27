@@ -6,6 +6,39 @@
   <title>Invoices - IWY Designs ERP</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/print.css">
+  <style>
+    .inv-form-layout { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:768px){ .inv-form-layout{ grid-template-columns:1fr; } }
+
+    /* Customer typeahead — identical to quotations */
+    .customer-wrap { position:relative; }
+    .customer-input-row { display:flex; gap:8px; }
+    .customer-suggestions { position:absolute; top:100%; left:0; right:0; background:var(--white); border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; max-height:220px; overflow-y:auto; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,.12); }
+    .customer-suggestion { padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); }
+    .customer-suggestion:hover { background:var(--light-blue); }
+    .customer-suggestion .cs-name { font-weight:600; color:var(--navy); }
+    .customer-suggestion .cs-sub { font-size:11px; color:var(--text-light); margin-top:1px; }
+    .customer-suggestion.new-entry { color:var(--gold-dark); font-style:italic; }
+
+    /* Terms toolbar */
+    .terms-toolbar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .terms-preset { padding:4px 10px; font-size:11px; font-weight:600; background:var(--light-gray); border:1px solid var(--border); border-radius:4px; cursor:pointer; transition:all .15s; }
+    .terms-preset:hover { background:var(--navy); color:#fff; border-color:var(--navy); }
+    .terms-append-btn { padding:4px 10px; font-size:11px; font-weight:600; background:transparent; border:1px dashed var(--border); border-radius:4px; cursor:pointer; color:var(--gold-dark); }
+    .terms-append-btn:hover { border-color:var(--gold); background:var(--light-gold); }
+
+    /* Status quick buttons in list */
+    .status-actions { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; }
+    .status-btn { padding:2px 8px; font-size:11px; font-weight:600; border:1.5px solid; border-radius:20px; cursor:pointer; background:transparent; transition:all .15s; white-space:nowrap; }
+    .status-btn.paid   { border-color:#15803d; color:#15803d; }
+    .status-btn.paid:hover { background:#15803d; color:#fff; }
+    .status-btn.partial{ border-color:#b45309; color:#b45309; }
+    .status-btn.partial:hover{ background:#b45309; color:#fff; }
+    .status-btn.cancelled{ border-color:#dc2626; color:#dc2626; }
+    .status-btn.cancelled:hover{ background:#dc2626; color:#fff; }
+    .status-btn.unpaid { border-color:#64748b; color:#64748b; }
+    .status-btn.unpaid:hover{ background:#64748b; color:#fff; }
+  </style>
 </head>
 <body>
 <div class="app-layout">
@@ -23,7 +56,7 @@
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
               Export CSV
             </button>
-            <button class="btn btn-outline-navy" onclick="openSelectQuotation()">
+            <button class="btn btn-outline" onclick="openSelectQuotation()">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
               From Quotation
             </button>
@@ -50,7 +83,7 @@
           <div class="table-container">
             <table>
               <thead>
-                <tr><th>Invoice #</th><th>Quotation Ref</th><th>Customer</th><th>Project</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+                <tr><th>Invoice #</th><th>Quot Ref</th><th>Customer</th><th>Project</th><th>Date</th><th>Amount</th><th>Status & Actions</th><th>Actions</th></tr>
               </thead>
               <tbody id="list-tbody"></tbody>
             </table>
@@ -66,10 +99,14 @@
         <div class="page-header">
           <div>
             <h1 id="form-title">New Invoice</h1>
-            <p id="form-subtitle">Create a new invoice</p>
+            <p id="form-subtitle">Create a new project invoice</p>
           </div>
           <div class="page-actions">
-            <button class="btn btn-outline" onclick="showList()">← Back</button>
+            <button class="btn btn-outline" onclick="showList()">← Back to List</button>
+            <button class="btn btn-primary" onclick="previewInvoice()">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              Preview PDF
+            </button>
             <button class="btn btn-gold" onclick="saveInvoice()">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
               Save Invoice
@@ -78,17 +115,35 @@
         </div>
 
         <div class="card" style="margin-bottom:20px;">
-          <div class="card-header"><div class="card-title">Invoice Details</div><div id="inv-number-badge" style="font-size:13px;font-weight:600;color:var(--gold-dark);"></div></div>
+          <div class="card-header">
+            <div class="card-title">Invoice Details</div>
+            <div id="inv-number-badge" style="font-size:13px;font-weight:600;color:var(--gold-dark);"></div>
+          </div>
           <div class="card-body">
             <input type="hidden" id="i-id">
             <input type="hidden" id="i-quot-id">
-            <div class="form-grid">
+            <div class="inv-form-layout">
+
+              <!-- Customer typeahead -->
               <div class="form-group">
                 <label>Customer <span class="req">*</span></label>
-                <select id="i-customer" onchange="onCustomerChange()">
-                  <option value="">-- Select Customer --</option>
-                </select>
+                <div class="customer-wrap">
+                  <div class="customer-input-row">
+                    <input type="hidden" id="i-customer-id">
+                    <input type="text" id="i-customer-name"
+                      placeholder="Type customer name to search or enter new..."
+                      autocomplete="off"
+                      oninput="onCustomerInput()"
+                      onfocus="onCustomerInput()"
+                      onblur="hideCustomerSuggestions()"
+                      style="flex:1;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="quickAddCustomer()" title="Add new customer" style="padding:0 10px;flex-shrink:0;">+ New</button>
+                  </div>
+                  <div id="customer-suggestions" class="customer-suggestions" style="display:none;"></div>
+                  <div id="customer-info-row" style="font-size:11px;color:var(--text-light);margin-top:4px;display:none;"></div>
+                </div>
               </div>
+
               <div class="form-group">
                 <label>Project Name <span class="req">*</span></label>
                 <input type="text" id="i-project" placeholder="Project name">
@@ -98,18 +153,22 @@
                 <input type="date" id="i-date">
               </div>
               <div class="form-group">
-                <label>Status</label>
+                <label>Payment Status</label>
                 <select id="i-status">
-                  <option>Unpaid</option><option>Paid</option><option>Partial</option><option>Cancelled</option>
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Partial">Partial Payment</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Cancelled">Cancelled</option>
                 </select>
               </div>
               <div class="form-group">
                 <label>Linked Quotation</label>
-                <input type="text" id="i-quot-ref" readonly placeholder="(none)">
+                <input type="text" id="i-quot-ref" readonly placeholder="(none — direct invoice)"
+                  style="background:var(--off-white);color:var(--text-light);">
               </div>
               <div class="form-group">
-                <label>Site Address</label>
-                <input type="text" id="i-site" placeholder="Site address">
+                <label>Site / Delivery Address</label>
+                <input type="text" id="i-site" placeholder="Site or project address">
               </div>
               <div class="form-group">
                 <label>Discount (%)</label>
@@ -120,60 +179,91 @@
                 <input type="number" id="i-gst" value="18" min="0" max="28" step="0.5" oninput="recalcTotals()">
               </div>
               <div class="form-group full-width">
-                <label>Remarks</label>
-                <textarea id="i-remarks" rows="2" placeholder="Remarks..."></textarea>
+                <label>Remarks / Notes</label>
+                <textarea id="i-remarks" rows="2" placeholder="Additional notes for the client..."></textarea>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ITEMS -->
+        <!-- ITEMS TABLE -->
         <div class="card" style="margin-bottom:20px;">
           <div class="card-header">
             <div class="card-title">Line Items</div>
-            <button class="btn btn-outline btn-sm" onclick="addItemRow()">+ Add Row</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span style="font-size:11px;color:var(--text-light);">Quick units:</span>
+              <span class="terms-preset" onclick="setLastUnit('SFT')">SFT</span>
+              <span class="terms-preset" onclick="setLastUnit('SQFT')">SQFT</span>
+              <span class="terms-preset" onclick="setLastUnit('RFT')">RFT</span>
+              <span class="terms-preset" onclick="setLastUnit('MTR')">MTR</span>
+              <span class="terms-preset" onclick="setLastUnit('NOS')">NOS</span>
+              <span class="terms-preset" onclick="setLastUnit('KG')">KG</span>
+              <button class="btn btn-outline btn-sm" onclick="addItemRow()">+ Add Row</button>
+            </div>
           </div>
           <div style="overflow-x:auto;">
-            <table class="items-table" id="items-table" style="min-width:680px;">
+            <table class="items-table" id="items-table" style="min-width:720px;">
               <thead><tr>
                 <th style="width:30px;">#</th>
                 <th>Description</th>
-                <th style="width:100px;">Measurement</th>
-                <th style="width:70px;">Unit</th>
-                <th style="width:60px;">Qty</th>
-                <th style="width:110px;">Unit Price (₹)</th>
-                <th style="width:110px;">Amount (₹)</th>
-                <th style="width:50px;"></th>
+                <th style="width:110px;">Measurement</th>
+                <th style="width:75px;">Unit</th>
+                <th style="width:65px;">Qty</th>
+                <th style="width:115px;">Unit Price (₹)</th>
+                <th style="width:115px;">Amount (₹)</th>
+                <th style="width:45px;"></th>
               </tr></thead>
               <tbody id="items-tbody"></tbody>
             </table>
           </div>
+          <div style="padding:12px 16px;border-top:1px solid var(--border);">
+            <button class="btn btn-outline btn-sm" onclick="addItemRow()">+ Add Row</button>
+          </div>
         </div>
 
-        <!-- TOTALS -->
+        <!-- TERMS + TOTALS -->
         <div style="display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Terms & Conditions</div></div>
-            <div class="card-body"><textarea id="i-terms" rows="5" placeholder="Terms..."></textarea></div>
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Terms & Conditions</div>
+                <button class="btn btn-outline btn-sm" onclick="resetTerms()">↺ Reset to Default</button>
+              </div>
+              <div class="card-body" style="padding-top:12px;">
+                <div class="terms-toolbar">
+                  <span style="font-size:11px;color:var(--text-light);align-self:center;">Append:</span>
+                  <button class="terms-append-btn" onclick="appendTerm('50% advance payment required before commencement of work.')">50% Advance</button>
+                  <button class="terms-append-btn" onclick="appendTerm('40% payment on material delivery to site.')">40% On Delivery</button>
+                  <button class="terms-append-btn" onclick="appendTerm('Balance 10% payment on completion of work.')">10% On Completion</button>
+                  <button class="terms-append-btn" onclick="appendTerm('All materials supplied by IWY Designs unless specified.')">Materials by IWY</button>
+                  <button class="terms-append-btn" onclick="appendTerm('GST as applicable will be charged extra.')">GST Extra</button>
+                  <button class="terms-append-btn" onclick="appendTerm('Payment due within 7 days of invoice date.')">7-day Payment</button>
+                </div>
+                <textarea id="i-terms" rows="7"
+                  placeholder="Terms and conditions will be pre-loaded from Settings..."
+                  style="width:100%;resize:vertical;"></textarea>
+              </div>
+            </div>
           </div>
           <div>
-            <div class="totals-section" style="min-width:290px;">
+            <div class="totals-section" style="min-width:300px;">
               <div class="total-row"><span>Sub Total</span><span class="amount" id="t-subtotal">₹ 0.00</span></div>
-              <div class="total-row" id="disc-row"><span>Discount (<span id="t-disc-pct">0</span>%)</span><span class="amount" id="t-discount" style="color:var(--danger);">- ₹ 0.00</span></div>
+              <div class="total-row" id="disc-row" style="display:none;"><span>Discount (<span id="t-disc-pct">0</span>%)</span><span class="amount" id="t-discount" style="color:var(--danger);">- ₹ 0.00</span></div>
               <div class="total-row" id="gst-row"><span>GST (<span id="t-gst-pct">18</span>%)</span><span class="amount" id="t-gst">₹ 0.00</span></div>
-              <div class="total-row" id="round-row"><span>Round Off</span><span class="amount" id="t-round">₹ 0.00</span></div>
+              <div class="total-row" id="round-row" style="display:none;"><span>Round Off</span><span class="amount" id="t-round">₹ 0.00</span></div>
               <div class="total-row main"><span>Grand Total</span><span id="t-grand">₹ 0.00</span></div>
             </div>
             <div class="amount-words" id="amount-words-box">Amount in Words: Zero Rupees Only</div>
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;flex-wrap:wrap;">
           <button class="btn btn-outline" onclick="showList()">Cancel</button>
-          <button class="btn btn-primary" onclick="previewInvoice()">Preview</button>
+          <button class="btn btn-primary" onclick="previewInvoice()">Preview PDF</button>
           <button class="btn btn-gold" onclick="saveInvoice()">Save Invoice</button>
         </div>
       </div>
+
     </div>
   </div>
 </div>
@@ -214,6 +304,27 @@
   </div>
 </div>
 
+<!-- QUICK ADD CUSTOMER MODAL -->
+<div class="modal-overlay" id="quick-customer-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>Add New Customer</h2>
+      <button class="modal-close" onclick="UTILS.closeModal('quick-customer-modal')"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Name <span class="req">*</span></label><input type="text" id="qc-name" class="form-control" placeholder="Customer full name"></div>
+      <div class="form-group"><label>Company</label><input type="text" id="qc-company" class="form-control" placeholder="Company or firm name"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="qc-phone" class="form-control" placeholder="+91-XXXXXXXXXX"></div>
+      <div class="form-group"><label>Email</label><input type="text" id="qc-email" class="form-control" placeholder="email@example.com"></div>
+      <div class="form-group"><label>Address</label><input type="text" id="qc-address" class="form-control" placeholder="Address"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UTILS.closeModal('quick-customer-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveQuickCustomer()">Save Customer</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container"></div>
 <div class="modal-overlay" id="confirm-modal"><div class="modal modal-sm"><div class="modal-header"><h2 id="confirm-title">Confirm</h2><button class="modal-close" onclick="UTILS.closeModal('confirm-modal')"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><div class="modal-body"><p id="confirm-msg" style="color:#4a5568;font-size:14px;"></p></div><div class="modal-footer"><button class="btn btn-outline" id="confirm-no">Cancel</button><button class="btn btn-danger" id="confirm-yes">Confirm</button></div></div></div>
 
@@ -225,343 +336,497 @@
 <script src="js/pdf.js"></script>
 
 <script>
-  AUTH.requireAuth();
-  document.getElementById('nav-container').innerHTML = buildNav('invoices');
-  document.getElementById('topbar-container').innerHTML = buildTopBar('Invoices', 'Manage project invoices');
+AUTH.requireAuth();
+document.getElementById('nav-container').innerHTML = buildNav('invoices');
+document.getElementById('topbar-container').innerHTML = buildTopBar('Invoices', 'Manage project invoices');
 
-  let allData = [], filteredData = [], currentPage = 1, PER_PAGE = 10;
-  let currentDocData = null, itemCount = 0;
+let allData = [], filteredData = [], currentPage = 1, PER_PAGE = 10;
+let currentDocData = null, itemCount = 0;
+let allCustomers = [];
 
-  function showList() {
-    document.getElementById('list-view').style.display = 'block';
-    document.getElementById('form-view').style.display = 'none';
-    loadList();
+// ======================================================
+//  LIST VIEW
+// ======================================================
+function showList() {
+  document.getElementById('list-view').style.display = 'block';
+  document.getElementById('form-view').style.display = 'none';
+  loadList();
+}
+
+function loadList() {
+  allData = STORE.getInvoices().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  filterList();
+}
+
+function filterList() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const status = document.getElementById('status-filter').value;
+  filteredData = allData.filter(i => {
+    const mS = !status || i.status === status;
+    const mQ = !q || (i.invoiceNumber || '').toLowerCase().includes(q) ||
+      (i.customerName || '').toLowerCase().includes(q) ||
+      (i.projectName || '').toLowerCase().includes(q) ||
+      (i.quotationNumber || '').toLowerCase().includes(q);
+    return mS && mQ;
+  });
+  currentPage = 1;
+  renderList();
+}
+
+function renderList() {
+  const sym = STORE.getSettings().currency || '₹';
+  document.getElementById('result-count').textContent = `${filteredData.length} invoice${filteredData.length !== 1 ? 's' : ''}`;
+  const start = (currentPage - 1) * PER_PAGE;
+  const page = filteredData.slice(start, start + PER_PAGE);
+  const tbody = document.getElementById('list-tbody');
+
+  if (page.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p>No invoices found</p><span>Create a new invoice or convert a quotation</span></div></td></tr>`;
+    renderPagination(); return;
   }
 
-  function loadList() {
-    allData = STORE.getInvoices().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    filterList();
+  tbody.innerHTML = page.map(inv => {
+    const statusActions = `<div class="status-actions">
+      ${inv.status !== 'Paid'      ? `<button class="status-btn paid"      onclick="updateStatus('${inv.id}','Paid')">✓ Paid</button>` : ''}
+      ${inv.status !== 'Partial'   ? `<button class="status-btn partial"   onclick="updateStatus('${inv.id}','Partial')">½ Partial</button>` : ''}
+      ${inv.status !== 'Unpaid'    ? `<button class="status-btn unpaid"    onclick="updateStatus('${inv.id}','Unpaid')">↩ Unpaid</button>` : ''}
+      ${inv.status !== 'Cancelled' ? `<button class="status-btn cancelled" onclick="updateStatus('${inv.id}','Cancelled')">✗ Cancel</button>` : ''}
+    </div>`;
+    return `<tr>
+      <td><a href="#" onclick="viewInvoice('${inv.id}');return false;" style="color:var(--navy);font-weight:700;">${UTILS.esc(inv.invoiceNumber)}</a></td>
+      <td>${inv.quotationNumber ? `<span style="color:var(--text-mid);font-size:12px;">${UTILS.esc(inv.quotationNumber)}</span>` : '<span style="color:var(--text-light);font-size:11px;">Direct</span>'}</td>
+      <td><div style="font-weight:500;">${UTILS.esc(inv.customerName || '-')}</div><div style="font-size:11px;color:var(--text-light);">${UTILS.esc(inv.customerPhone || '')}</div></td>
+      <td>${UTILS.esc(inv.projectName || '-')}</td>
+      <td>${UTILS.formatDate(inv.invoiceDate || inv.date || inv.createdAt)}</td>
+      <td style="font-weight:600;">${sym} ${UTILS.formatNum(inv.grandTotal)}</td>
+      <td>${UTILS.statusBadge(inv.status)}${statusActions}</td>
+      <td>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-xs" onclick="viewInvoice('${inv.id}')" title="Preview PDF">👁</button>
+          <button class="btn btn-outline btn-xs" onclick="showForm('edit','${inv.id}')" title="Edit">✏️</button>
+          <button class="btn btn-outline btn-xs" onclick="deleteInvoice('${inv.id}')" title="Delete" style="color:var(--danger);">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  renderPagination();
+}
+
+function updateStatus(id, status) {
+  const inv = STORE.getInvoice(id);
+  if (!inv) return;
+  STORE.saveInvoice({ ...inv, status });
+  UTILS.toast('Status updated to ' + status, 'success');
+  loadList();
+}
+
+function renderPagination() {
+  const total = Math.ceil(filteredData.length / PER_PAGE);
+  const p = document.getElementById('pagination');
+  if (total <= 1) { p.innerHTML = ''; return; }
+  let html = `<button onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for (let i=1;i<=total;i++){
+    if(i===1||i===total||Math.abs(i-currentPage)<=1) html+=`<button class="${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    else if(Math.abs(i-currentPage)===2) html+='<button disabled>...</button>';
   }
+  html+=`<button onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
+  p.innerHTML = html;
+}
+function goPage(p){const t=Math.ceil(filteredData.length/PER_PAGE);if(p<1||p>t)return;currentPage=p;renderList();}
 
-  function filterList() {
-    const q = document.getElementById('search-input').value.toLowerCase();
-    const status = document.getElementById('status-filter').value;
-    filteredData = allData.filter(i => {
-      const mS = !status || i.status === status;
-      const mQ = !q || (i.invoiceNumber || '').toLowerCase().includes(q) ||
-        (i.customerName || '').toLowerCase().includes(q) ||
-        (i.projectName || '').toLowerCase().includes(q) ||
-        (i.quotationNumber || '').toLowerCase().includes(q);
-      return mS && mQ;
-    });
-    currentPage = 1;
-    renderList();
-  }
+// ======================================================
+//  FORM VIEW
+// ======================================================
+function showForm(mode, id) {
+  document.getElementById('list-view').style.display = 'none';
+  document.getElementById('form-view').style.display = 'block';
+  allCustomers = STORE.getCustomers();
+  const s = STORE.getSettings();
 
-  function renderList() {
-    const sym = STORE.getSettings().currency || '₹';
-    document.getElementById('result-count').textContent = `${filteredData.length} invoice${filteredData.length !== 1 ? 's' : ''}`;
-    const start = (currentPage - 1) * PER_PAGE;
-    const page = filteredData.slice(start, start + PER_PAGE);
-    const tbody = document.getElementById('list-tbody');
-    if (page.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p>No invoices found</p><span>Convert a quotation to invoice to get started</span></div></td></tr>`;
-    } else {
-      tbody.innerHTML = page.map(inv => `<tr>
-        <td><a href="#" onclick="viewInvoice('${inv.id}');return false;" style="color:var(--navy);font-weight:700;">${UTILS.esc(inv.invoiceNumber)}</a></td>
-        <td>${inv.quotationNumber ? `<a href="quotations.html?view=${inv.quotationId}" style="color:var(--text-mid);font-size:12px;">${UTILS.esc(inv.quotationNumber)}</a>` : '-'}</td>
-        <td><div style="font-weight:500;">${UTILS.esc(inv.customerName || '-')}</div></td>
-        <td>${UTILS.esc(inv.projectName || '-')}</td>
-        <td>${UTILS.formatDate(inv.invoiceDate || inv.date || inv.createdAt)}</td>
-        <td style="font-weight:600;">${sym} ${UTILS.formatNum(inv.grandTotal)}</td>
-        <td>${UTILS.statusBadge(inv.status)}</td>
-        <td>
-          <div style="display:flex;gap:3px;flex-wrap:wrap;">
-            <button class="btn btn-outline btn-xs" onclick="viewInvoice('${inv.id}')" title="View">👁</button>
-            <button class="btn btn-outline btn-xs" onclick="showForm('edit','${inv.id}')" title="Edit">✏️</button>
-            <select onchange="updateStatus('${inv.id}',this.value)" style="font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;">
-              ${['Unpaid','Paid','Partial','Cancelled'].map(s => `<option ${s===inv.status?'selected':''}>${s}</option>`).join('')}
-            </select>
-            <button class="btn btn-outline btn-xs" onclick="deleteInvoice('${inv.id}')" title="Delete" style="color:var(--danger);">🗑</button>
-          </div>
-        </td>
-      </tr>`).join('');
-    }
-    renderPagination();
-  }
+  if (mode === 'new') {
+    document.getElementById('form-title').textContent = 'New Invoice';
+    document.getElementById('form-subtitle').textContent = 'Create a direct invoice';
+    document.getElementById('i-id').value = '';
+    document.getElementById('i-quot-id').value = '';
+    document.getElementById('i-quot-ref').value = '';
+    document.getElementById('i-customer-id').value = '';
+    document.getElementById('i-customer-name').value = '';
+    document.getElementById('customer-info-row').style.display = 'none';
+    document.getElementById('i-date').value = UTILS.todayISO();
+    document.getElementById('i-project').value = '';
+    document.getElementById('i-site').value = '';
+    document.getElementById('i-discount').value = '0';
+    document.getElementById('i-gst').value = s.defaultGST || 18;
+    document.getElementById('i-remarks').value = '';
+    document.getElementById('i-status').value = 'Unpaid';
+    document.getElementById('inv-number-badge').textContent = 'New (auto-numbered on save)';
+    // Pre-load terms from Settings
+    document.getElementById('i-terms').value = s.defaultTerms || '';
 
-  function renderPagination() {
-    const total = Math.ceil(filteredData.length / PER_PAGE);
-    const p = document.getElementById('pagination');
-    if (total <= 1) { p.innerHTML = ''; return; }
-    let html = `<button onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
-    for (let i=1;i<=total;i++){
-      if(i===1||i===total||Math.abs(i-currentPage)<=1) html+=`<button class="${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
-      else if(Math.abs(i-currentPage)===2) html+='<button disabled>...</button>';
-    }
-    html+=`<button onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
-    p.innerHTML = html;
-  }
-  function goPage(p){const t=Math.ceil(filteredData.length/PER_PAGE);if(p<1||p>t)return;currentPage=p;renderList();}
+    const cid = new URLSearchParams(location.search).get('customer');
+    if (cid) { const c = STORE.getCustomer(cid); if (c) setCustomer(c); }
+    clearItems(); addItemRow(); recalcTotals();
 
-  function showForm(mode, id) {
-    document.getElementById('list-view').style.display = 'none';
-    document.getElementById('form-view').style.display = 'block';
-    const s = STORE.getSettings();
-
-    // Load customers
-    const customers = STORE.getCustomers();
-    const sel = document.getElementById('i-customer');
-    sel.innerHTML = '<option value="">-- Select Customer --</option>' + customers.map(c => `<option value="${c.id}">${UTILS.esc(c.name)}${c.company ? ' - ' + UTILS.esc(c.company) : ''}</option>`).join('');
-
-    if (mode === 'new') {
-      document.getElementById('form-title').textContent = 'New Invoice';
-      document.getElementById('form-subtitle').textContent = 'Create a new project invoice';
-      document.getElementById('i-id').value = '';
-      document.getElementById('i-quot-id').value = '';
-      document.getElementById('i-quot-ref').value = '';
-      document.getElementById('i-date').value = UTILS.todayISO();
-      document.getElementById('i-project').value = '';
-      document.getElementById('i-site').value = '';
-      document.getElementById('i-discount').value = '0';
-      document.getElementById('i-gst').value = s.defaultGST || 18;
-      document.getElementById('i-remarks').value = '';
-      document.getElementById('i-terms').value = s.defaultTerms || '';
-      document.getElementById('i-status').value = 'Unpaid';
-      document.getElementById('inv-number-badge').textContent = 'New (auto-numbered on save)';
-      clearItems(); addItemRow(); recalcTotals();
-    } else if (mode === 'edit' && id) {
-      const inv = STORE.getInvoice(id);
-      if (!inv) { showList(); return; }
-      document.getElementById('form-title').textContent = 'Edit Invoice';
-      document.getElementById('form-subtitle').textContent = inv.invoiceNumber;
-      document.getElementById('i-id').value = inv.id;
-      document.getElementById('i-quot-id').value = inv.quotationId || '';
-      document.getElementById('i-quot-ref').value = inv.quotationNumber || '';
-      document.getElementById('i-customer').value = inv.customerId || '';
-      document.getElementById('i-project').value = inv.projectName || '';
-      document.getElementById('i-date').value = UTILS.toDateInput(inv.invoiceDate || inv.date);
-      document.getElementById('i-site').value = inv.siteAddress || '';
-      document.getElementById('i-discount').value = inv.discountPct || 0;
-      document.getElementById('i-gst').value = inv.gstPct ?? (s.defaultGST || 18);
-      document.getElementById('i-remarks').value = inv.remarks || '';
-      document.getElementById('i-terms').value = inv.terms || s.defaultTerms || '';
-      document.getElementById('i-status').value = inv.status || 'Unpaid';
-      document.getElementById('inv-number-badge').textContent = inv.invoiceNumber;
-      clearItems(); (inv.items || []).forEach(item => addItemRow(item));
-      if (!inv.items || inv.items.length === 0) addItemRow();
-      recalcTotals();
-    }
-  }
-
-  function clearItems() { document.getElementById('items-tbody').innerHTML = ''; itemCount = 0; }
-
-  function addItemRow(data) {
-    itemCount++;
-    const n = itemCount;
-    const tr = document.createElement('tr');
-    tr.className = 'item-row';
-    tr.innerHTML = `
-      <td style="color:var(--gold);font-weight:700;font-size:12px;">${n}</td>
-      <td><input type="text" class="desc" placeholder="Description..." value="${UTILS.esc(data?.description || '')}"></td>
-      <td><input type="text" class="meas" placeholder="Size" value="${UTILS.esc(data?.measurement || '')}"></td>
-      <td><input type="text" class="unit" placeholder="SFT" value="${UTILS.esc(data?.unit || '')}"></td>
-      <td><input type="number" class="qty" placeholder="0" value="${data?.qty || ''}" min="0" step="any" oninput="calcRowAmount(this)"></td>
-      <td><input type="number" class="price" placeholder="0.00" value="${data?.unitPrice || ''}" min="0" step="0.01" oninput="calcRowAmount(this)"></td>
-      <td><input type="number" class="amount" readonly value="${data?.amount || ''}" style="background:var(--off-white);font-weight:600;"></td>
-      <td><button onclick="this.closest('tr').remove();recalcTotals();" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:16px;">🗑</button></td>`;
-    document.getElementById('items-tbody').appendChild(tr);
-  }
-
-  function calcRowAmount(input) {
-    const row = input.closest('tr');
-    const qty = parseFloat(row.querySelector('.qty').value) || 0;
-    const price = parseFloat(row.querySelector('.price').value) || 0;
-    row.querySelector('.amount').value = (qty * price).toFixed(2);
-    recalcTotals();
-  }
-
-  function getItems() {
-    return [...document.querySelectorAll('#items-tbody .item-row')].map(tr => ({
-      description: tr.querySelector('.desc').value.trim(),
-      measurement: tr.querySelector('.meas').value.trim(),
-      unit: tr.querySelector('.unit').value.trim(),
-      qty: parseFloat(tr.querySelector('.qty').value) || 0,
-      unitPrice: parseFloat(tr.querySelector('.price').value) || 0,
-      amount: parseFloat(tr.querySelector('.amount').value) || 0
-    })).filter(i => i.description || i.amount);
-  }
-
-  function recalcTotals() {
-    const items = [...document.querySelectorAll('#items-tbody .item-row')].map(tr => ({ amount: parseFloat(tr.querySelector('.amount').value) || 0 }));
-    const discPct = parseFloat(document.getElementById('i-discount').value) || 0;
-    const gstPct = parseFloat(document.getElementById('i-gst').value) || 0;
-    const t = UTILS.calcTotals(items, discPct, gstPct);
-    const sym = STORE.getSettings().currency || '₹';
-    document.getElementById('t-subtotal').textContent = `${sym} ${UTILS.formatNum(t.subtotal)}`;
-    document.getElementById('t-disc-pct').textContent = discPct;
-    document.getElementById('t-discount').textContent = `- ${sym} ${UTILS.formatNum(t.discountAmt)}`;
-    document.getElementById('disc-row').style.display = t.discountAmt > 0 ? 'flex' : 'none';
-    document.getElementById('t-gst-pct').textContent = gstPct;
-    document.getElementById('t-gst').textContent = `${sym} ${UTILS.formatNum(t.gstAmt)}`;
-    document.getElementById('gst-row').style.display = t.gstAmt > 0 ? 'flex' : 'none';
-    document.getElementById('t-round').textContent = (t.roundOff >= 0 ? '+' : '') + UTILS.formatNum(t.roundOff);
-    document.getElementById('round-row').style.display = t.roundOff !== 0 ? 'flex' : 'none';
-    document.getElementById('t-grand').textContent = `${sym} ${UTILS.formatNum(t.grandTotal)}`;
-    document.getElementById('amount-words-box').innerHTML = 'Amount in Words: <strong>' + UTILS.amountInWords(t.grandTotal) + '</strong>';
-  }
-
-  function saveInvoice() {
-    const customerId = document.getElementById('i-customer').value;
-    const projectName = document.getElementById('i-project').value.trim();
-    if (!customerId) { UTILS.toast('Please select a customer', 'error'); return; }
-    if (!projectName) { UTILS.toast('Please enter a project name', 'error'); return; }
-
-    const customer = STORE.getCustomer(customerId);
-    const items = getItems();
-    const discPct = parseFloat(document.getElementById('i-discount').value) || 0;
-    const gstPct = parseFloat(document.getElementById('i-gst').value) || 0;
-    const totals = UTILS.calcTotals(items, discPct, gstPct);
-
-    const data = {
-      id: document.getElementById('i-id').value || undefined,
-      quotationId: document.getElementById('i-quot-id').value,
-      quotationNumber: document.getElementById('i-quot-ref').value,
-      customerId,
-      customerName: customer?.name || '',
-      customerCompany: customer?.company || '',
-      customerPhone: customer?.phone || '',
-      customerEmail: customer?.email || '',
-      customerAddress: customer?.address || '',
-      customerGst: customer?.gst || '',
-      projectName,
-      invoiceDate: document.getElementById('i-date').value,
-      siteAddress: document.getElementById('i-site').value.trim(),
-      discountPct: discPct, gstPct,
-      remarks: document.getElementById('i-remarks').value.trim(),
-      terms: document.getElementById('i-terms').value.trim(),
-      status: document.getElementById('i-status').value,
-      items, ...totals
-    };
-
-    const id = STORE.saveInvoice(data);
-    currentDocData = STORE.getInvoice(id);
-    UTILS.toast('Invoice saved successfully!', 'success');
-    showList();
-    viewInvoice(id);
-  }
-
-  function viewInvoice(id) {
+  } else if (mode === 'edit' && id) {
     const inv = STORE.getInvoice(id);
-    currentDocData = inv;
-    PDF.preview(inv, 'invoice');
-  }
-
-  function previewInvoice() {
-    const customerId = document.getElementById('i-customer').value;
-    if (!customerId) { UTILS.toast('Please fill in customer and save first', 'info'); return; }
-    saveInvoice();
-  }
-
-  function printCurrentDoc() { if (currentDocData) PDF.print(currentDocData, 'invoice'); }
-  function downloadCurrentDoc() { if (currentDocData) PDF.download(currentDocData, 'invoice'); }
-
-  function updateStatus(id, status) {
-    const inv = STORE.getInvoice(id);
-    if (!inv) return;
-    STORE.saveInvoice({ ...inv, status });
-    UTILS.toast('Status updated to ' + status, 'success');
-    loadList();
-  }
-
-  async function deleteInvoice(id) {
-    const inv = STORE.getInvoice(id);
-    const confirmed = await UTILS.confirm(`Delete invoice "${inv?.invoiceNumber}"?`, 'Delete Invoice');
-    if (!confirmed) return;
-    STORE.deleteInvoice(id);
-    UTILS.toast('Invoice deleted', 'success');
-    loadList();
-  }
-
-  function openSelectQuotation() {
-    renderQuotsList('');
-    UTILS.openModal('select-quot-modal');
-  }
-
-  let allQuots = [];
-  function renderQuotsList(query) {
-    allQuots = STORE.getQuotations().filter(q => q.status !== 'Invoiced');
-    const q = query.toLowerCase();
-    const filtered = q ? allQuots.filter(qt =>
-      (qt.quotationNumber || '').toLowerCase().includes(q) ||
-      (qt.customerName || '').toLowerCase().includes(q) ||
-      (qt.projectName || '').toLowerCase().includes(q)
-    ) : allQuots;
-
-    const sym = STORE.getSettings().currency || '₹';
-    document.getElementById('quot-select-tbody').innerHTML = filtered.length === 0
-      ? '<tr><td colspan="6" style="text-align:center;padding:20px;color:#a0aec0;">No open quotations</td></tr>'
-      : filtered.map(q => `<tr>
-          <td style="font-weight:600;color:var(--navy);">${UTILS.esc(q.quotationNumber)}</td>
-          <td>${UTILS.esc(q.customerName)}</td>
-          <td>${UTILS.esc(q.projectName)}</td>
-          <td>${sym} ${UTILS.formatNum(q.grandTotal)}</td>
-          <td>${UTILS.statusBadge(q.status)}</td>
-          <td><button class="btn btn-gold btn-sm" onclick="selectQuotation('${q.id}')">Select</button></td>
-        </tr>`).join('');
-  }
-
-  function filterQuots(query) { renderQuotsList(query); }
-
-  function selectQuotation(id) {
-    const q = STORE.getQuotation(id);
-    if (!q) return;
-    UTILS.closeModal('select-quot-modal');
-    showForm('new');
-
-    // Populate from quotation
-    const sel = document.getElementById('i-customer');
-    if (q.customerId) sel.value = q.customerId;
-    document.getElementById('i-project').value = q.projectName || '';
-    document.getElementById('i-site').value = q.siteAddress || '';
-    document.getElementById('i-discount').value = q.discountPct || 0;
-    document.getElementById('i-gst').value = q.gstPct ?? 18;
-    document.getElementById('i-remarks').value = q.remarks || '';
-    document.getElementById('i-terms').value = q.terms || STORE.getSettings().defaultTerms || '';
-    document.getElementById('i-quot-id').value = q.id;
-    document.getElementById('i-quot-ref').value = q.quotationNumber;
+    if (!inv) { showList(); return; }
+    document.getElementById('form-title').textContent = 'Edit Invoice';
+    document.getElementById('form-subtitle').textContent = inv.invoiceNumber;
+    document.getElementById('i-id').value = inv.id;
+    document.getElementById('i-quot-id').value = inv.quotationId || '';
+    document.getElementById('i-quot-ref').value = inv.quotationNumber || '';
+    document.getElementById('i-customer-id').value = inv.customerId || '';
+    document.getElementById('i-customer-name').value = inv.customerName || '';
+    if (inv.customerName) {
+      const infoRow = document.getElementById('customer-info-row');
+      infoRow.textContent = [inv.customerPhone, inv.customerEmail].filter(Boolean).join(' · ');
+      infoRow.style.display = [inv.customerPhone, inv.customerEmail].some(Boolean) ? 'block' : 'none';
+    }
+    document.getElementById('i-project').value = inv.projectName || '';
+    document.getElementById('i-date').value = UTILS.toDateInput(inv.invoiceDate || inv.date);
+    document.getElementById('i-site').value = inv.siteAddress || '';
+    document.getElementById('i-discount').value = inv.discountPct || 0;
+    document.getElementById('i-gst').value = inv.gstPct ?? (s.defaultGST || 18);
+    document.getElementById('i-remarks').value = inv.remarks || '';
+    // Terms: use saved terms OR fall back to settings default
+    document.getElementById('i-terms').value = inv.terms || s.defaultTerms || '';
+    document.getElementById('i-status').value = inv.status || 'Unpaid';
+    document.getElementById('inv-number-badge').textContent = inv.invoiceNumber;
     clearItems();
-    (q.items || []).forEach(item => addItemRow(item));
-    if (!q.items || q.items.length === 0) addItemRow();
+    (inv.items || []).forEach(item => addItemRow(item));
+    if (!inv.items || inv.items.length === 0) addItemRow();
     recalcTotals();
   }
+}
 
-  function onCustomerChange() {
-    const id = document.getElementById('i-customer').value;
-    const c = STORE.getCustomer(id);
-    if (c?.address) document.getElementById('i-site').value = c.address;
-  }
+// ======================================================
+//  CUSTOMER TYPEAHEAD
+// ======================================================
+let suggTimeout = null;
+function onCustomerInput() {
+  clearTimeout(suggTimeout);
+  suggTimeout = setTimeout(() => {
+    const val = document.getElementById('i-customer-name').value.trim().toLowerCase();
+    const box = document.getElementById('customer-suggestions');
+    document.getElementById('i-customer-id').value = '';
+    document.getElementById('customer-info-row').style.display = 'none';
 
-  function exportInvoices() {
-    const data = filteredData.map(i => ({
-      'Invoice #': i.invoiceNumber, 'Quotation Ref': i.quotationNumber || '',
-      Customer: i.customerName, Project: i.projectName,
-      Date: UTILS.formatDate(i.invoiceDate), Amount: i.grandTotal, Status: i.status
-    }));
-    UTILS.exportCSV(data, 'IWY-Invoices');
-    UTILS.toast('Invoices exported', 'success');
-  }
+    const matches = allCustomers.filter(c =>
+      c.name.toLowerCase().includes(val) ||
+      (c.company || '').toLowerCase().includes(val) ||
+      (c.phone || '').includes(val)
+    ).slice(0, 8);
 
-  // URL params
-  const params = new URLSearchParams(location.search);
-  if (params.get('view')) {
-    showList();
-    viewInvoice(params.get('view'));
-  } else if (params.get('new') === '1') {
-    showForm('new');
-  } else {
-    showList();
+    if (!val && matches.length === 0) { box.style.display = 'none'; return; }
+
+    let html = matches.map(c => `
+      <div class="customer-suggestion" onmousedown="selectCustomer('${c.id}')">
+        <div class="cs-name">${UTILS.esc(c.name)}</div>
+        <div class="cs-sub">${[c.company, c.phone, c.city].filter(Boolean).join(' · ')}</div>
+      </div>`).join('');
+
+    if (val) {
+      html += `<div class="customer-suggestion new-entry" onmousedown="useTypedName()">
+        Use "<strong>${UTILS.esc(val)}</strong>" as customer name (not in DB)
+      </div>`;
+    }
+
+    box.innerHTML = html;
+    box.style.display = 'block';
+  }, 120);
+}
+
+function selectCustomer(id) {
+  const c = STORE.getCustomer(id);
+  if (!c) return;
+  setCustomer(c);
+  document.getElementById('customer-suggestions').style.display = 'none';
+}
+
+function setCustomer(c) {
+  document.getElementById('i-customer-id').value = c.id;
+  document.getElementById('i-customer-name').value = c.name;
+  const infoRow = document.getElementById('customer-info-row');
+  const info = [c.phone, c.email, c.city].filter(Boolean).join(' · ');
+  infoRow.textContent = info;
+  infoRow.style.display = info ? 'block' : 'none';
+  if (c.address) document.getElementById('i-site').value = c.address;
+}
+
+function useTypedName() {
+  document.getElementById('i-customer-id').value = '';
+  document.getElementById('customer-suggestions').style.display = 'none';
+  document.getElementById('customer-info-row').style.display = 'none';
+}
+
+function hideCustomerSuggestions() {
+  setTimeout(() => { document.getElementById('customer-suggestions').style.display = 'none'; }, 200);
+}
+
+function quickAddCustomer() {
+  const typed = document.getElementById('i-customer-name').value.trim();
+  document.getElementById('qc-name').value = typed;
+  document.getElementById('qc-company').value = '';
+  document.getElementById('qc-phone').value = '';
+  document.getElementById('qc-email').value = '';
+  document.getElementById('qc-address').value = '';
+  UTILS.openModal('quick-customer-modal');
+  setTimeout(() => document.getElementById('qc-name').focus(), 100);
+}
+
+function saveQuickCustomer() {
+  const name = document.getElementById('qc-name').value.trim();
+  if (!name) { UTILS.toast('Customer name is required', 'error'); return; }
+  const c = {
+    name,
+    company: document.getElementById('qc-company').value.trim(),
+    phone:   document.getElementById('qc-phone').value.trim(),
+    email:   document.getElementById('qc-email').value.trim(),
+    address: document.getElementById('qc-address').value.trim()
+  };
+  const id = STORE.saveCustomer(c);
+  allCustomers = STORE.getCustomers();
+  setCustomer({ ...c, id });
+  UTILS.closeModal('quick-customer-modal');
+  UTILS.toast(`Customer "${name}" added`, 'success');
+}
+
+// ======================================================
+//  TERMS
+// ======================================================
+function resetTerms() {
+  document.getElementById('i-terms').value = STORE.getSettings().defaultTerms || '';
+  UTILS.toast('Terms reset to default from Settings', 'info');
+}
+
+function appendTerm(text) {
+  const ta = document.getElementById('i-terms');
+  const existing = ta.value.trim();
+  ta.value = existing ? existing + '\n' + text : text;
+  ta.focus();
+}
+
+// ======================================================
+//  ITEMS
+// ======================================================
+function clearItems() { document.getElementById('items-tbody').innerHTML = ''; itemCount = 0; }
+
+function addItemRow(data) {
+  itemCount++;
+  const n = itemCount;
+  const tr = document.createElement('tr');
+  tr.className = 'item-row';
+  tr.innerHTML = `
+    <td style="color:var(--gold);font-weight:700;font-size:12px;">${n}</td>
+    <td><input type="text" class="desc" placeholder="Description of work..." value="${UTILS.esc(data?.description || '')}"></td>
+    <td><input type="text" class="meas" placeholder="e.g. 10 x 12" value="${UTILS.esc(data?.measurement || '')}"></td>
+    <td><input type="text" class="unit" placeholder="SFT" value="${UTILS.esc(data?.unit || '')}" style="width:100%;"></td>
+    <td><input type="number" class="qty" placeholder="0" value="${data?.qty || ''}" min="0" step="any" oninput="calcRowAmount(this)"></td>
+    <td><input type="number" class="price" placeholder="0.00" value="${data?.unitPrice || ''}" min="0" step="0.01" oninput="calcRowAmount(this)"></td>
+    <td><input type="number" class="amount" readonly value="${data?.amount || ''}" style="background:var(--off-white);font-weight:600;"></td>
+    <td><button onclick="this.closest('tr').remove();recalcTotals();" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:16px;" title="Delete row">🗑</button></td>`;
+  document.getElementById('items-tbody').appendChild(tr);
+}
+
+function calcRowAmount(input) {
+  const row = input.closest('tr');
+  const qty = parseFloat(row.querySelector('.qty').value) || 0;
+  const price = parseFloat(row.querySelector('.price').value) || 0;
+  row.querySelector('.amount').value = (qty * price).toFixed(2);
+  recalcTotals();
+}
+
+function setLastUnit(unit) {
+  const rows = document.querySelectorAll('#items-tbody .unit');
+  if (rows.length > 0) rows[rows.length - 1].value = unit;
+}
+
+function getItems() {
+  return [...document.querySelectorAll('#items-tbody .item-row')].map(tr => ({
+    description: tr.querySelector('.desc').value.trim(),
+    measurement: tr.querySelector('.meas').value.trim(),
+    unit:        tr.querySelector('.unit').value.trim(),
+    qty:         parseFloat(tr.querySelector('.qty').value) || 0,
+    unitPrice:   parseFloat(tr.querySelector('.price').value) || 0,
+    amount:      parseFloat(tr.querySelector('.amount').value) || 0
+  })).filter(i => i.description || i.amount);
+}
+
+function recalcTotals() {
+  const items = [...document.querySelectorAll('#items-tbody .item-row')].map(tr => ({ amount: parseFloat(tr.querySelector('.amount').value) || 0 }));
+  const discPct = parseFloat(document.getElementById('i-discount').value) || 0;
+  const gstPct  = parseFloat(document.getElementById('i-gst').value) || 0;
+  const t = UTILS.calcTotals(items, discPct, gstPct);
+  const sym = STORE.getSettings().currency || '₹';
+  document.getElementById('t-subtotal').textContent = `${sym} ${UTILS.formatNum(t.subtotal)}`;
+  document.getElementById('t-disc-pct').textContent = discPct;
+  document.getElementById('t-discount').textContent = `- ${sym} ${UTILS.formatNum(t.discountAmt)}`;
+  document.getElementById('disc-row').style.display = t.discountAmt > 0 ? 'flex' : 'none';
+  document.getElementById('t-gst-pct').textContent = gstPct;
+  document.getElementById('t-gst').textContent = `${sym} ${UTILS.formatNum(t.gstAmt)}`;
+  document.getElementById('gst-row').style.display = t.gstAmt > 0 ? 'flex' : 'none';
+  document.getElementById('t-round').textContent = (t.roundOff >= 0 ? '+' : '') + UTILS.formatNum(t.roundOff);
+  document.getElementById('round-row').style.display = t.roundOff !== 0 ? 'flex' : 'none';
+  document.getElementById('t-grand').textContent = `${sym} ${UTILS.formatNum(t.grandTotal)}`;
+  document.getElementById('amount-words-box').innerHTML = 'Amount in Words: <strong>' + UTILS.amountInWords(t.grandTotal) + '</strong>';
+}
+
+// ======================================================
+//  SAVE
+// ======================================================
+function collectFormData() {
+  const customerId   = document.getElementById('i-customer-id').value;
+  const customerName = document.getElementById('i-customer-name').value.trim();
+  if (!customerName) { UTILS.toast('Please enter or select a customer name', 'error'); return null; }
+  const projectName  = document.getElementById('i-project').value.trim();
+  if (!projectName)  { UTILS.toast('Please enter a project name', 'error'); return null; }
+
+  const customer = customerId ? STORE.getCustomer(customerId) : null;
+  const items    = getItems();
+  const discPct  = parseFloat(document.getElementById('i-discount').value) || 0;
+  const gstPct   = parseFloat(document.getElementById('i-gst').value) || 0;
+  const totals   = UTILS.calcTotals(items, discPct, gstPct);
+
+  return {
+    id:              document.getElementById('i-id').value || undefined,
+    quotationId:     document.getElementById('i-quot-id').value || undefined,
+    quotationNumber: document.getElementById('i-quot-ref').value || undefined,
+    customerId:      customerId || undefined,
+    customerName:    customer?.name || customerName,
+    customerCompany: customer?.company || '',
+    customerPhone:   customer?.phone  || '',
+    customerEmail:   customer?.email  || '',
+    customerAddress: customer?.address || '',
+    customerGst:     customer?.gst    || '',
+    projectName,
+    invoiceDate:  document.getElementById('i-date').value,
+    siteAddress:  document.getElementById('i-site').value.trim(),
+    discountPct:  discPct,
+    gstPct,
+    remarks: document.getElementById('i-remarks').value.trim(),
+    terms:   document.getElementById('i-terms').value.trim(),
+    status:  document.getElementById('i-status').value,
+    items, ...totals
+  };
+}
+
+function saveInvoice() {
+  const data = collectFormData();
+  if (!data) return;
+  const id = STORE.saveInvoice(data);
+  currentDocData = STORE.getInvoice(id);
+  UTILS.toast('Invoice saved!', 'success');
+  showList();
+  viewInvoice(id);
+}
+
+function previewInvoice() {
+  const data = collectFormData();
+  if (!data) return;
+  const id = STORE.saveInvoice(data);
+  currentDocData = STORE.getInvoice(id);
+  UTILS.toast('Invoice saved!', 'success');
+  PDF.preview(currentDocData, 'invoice');
+}
+
+function viewInvoice(id) {
+  currentDocData = STORE.getInvoice(id);
+  PDF.preview(currentDocData, 'invoice');
+}
+
+function printCurrentDoc()    { if (currentDocData) PDF.print(currentDocData, 'invoice'); }
+function downloadCurrentDoc() { if (currentDocData) PDF.download(currentDocData, 'invoice'); }
+
+// ======================================================
+//  DELETE
+// ======================================================
+async function deleteInvoice(id) {
+  const inv = STORE.getInvoice(id);
+  const confirmed = await UTILS.confirm(`Delete invoice "${inv?.invoiceNumber}"?`, 'Delete Invoice');
+  if (!confirmed) return;
+  STORE.deleteInvoice(id);
+  UTILS.toast('Invoice deleted', 'success');
+  loadList();
+}
+
+// ======================================================
+//  FROM QUOTATION
+// ======================================================
+function openSelectQuotation() {
+  document.getElementById('quot-search').value = '';
+  renderQuotsList('');
+  UTILS.openModal('select-quot-modal');
+}
+
+let allQuots = [];
+function renderQuotsList(query) {
+  allQuots = STORE.getQuotations().filter(q => q.status !== 'Invoiced');
+  const q = query.toLowerCase();
+  const filtered = q ? allQuots.filter(qt =>
+    (qt.quotationNumber || '').toLowerCase().includes(q) ||
+    (qt.customerName   || '').toLowerCase().includes(q) ||
+    (qt.projectName    || '').toLowerCase().includes(q)
+  ) : allQuots;
+  const sym = STORE.getSettings().currency || '₹';
+  document.getElementById('quot-select-tbody').innerHTML = filtered.length === 0
+    ? '<tr><td colspan="6" style="text-align:center;padding:20px;color:#a0aec0;">No open quotations found</td></tr>'
+    : filtered.map(q => `<tr>
+        <td style="font-weight:600;color:var(--navy);">${UTILS.esc(q.quotationNumber)}</td>
+        <td>${UTILS.esc(q.customerName)}</td>
+        <td>${UTILS.esc(q.projectName)}</td>
+        <td>${sym} ${UTILS.formatNum(q.grandTotal)}</td>
+        <td>${UTILS.statusBadge(q.status)}</td>
+        <td><button class="btn btn-gold btn-sm" onclick="selectQuotation('${q.id}')">Select</button></td>
+      </tr>`).join('');
+}
+
+function filterQuots(query) { renderQuotsList(query); }
+
+function selectQuotation(id) {
+  const q = STORE.getQuotation(id);
+  if (!q) return;
+  UTILS.closeModal('select-quot-modal');
+  allCustomers = STORE.getCustomers();
+  showForm('new');
+
+  // Populate from quotation
+  if (q.customerId) {
+    const c = STORE.getCustomer(q.customerId);
+    if (c) setCustomer(c);
+  } else if (q.customerName) {
+    document.getElementById('i-customer-name').value = q.customerName;
   }
+  document.getElementById('i-project').value   = q.projectName || '';
+  document.getElementById('i-site').value      = q.siteAddress || '';
+  document.getElementById('i-discount').value  = q.discountPct || 0;
+  document.getElementById('i-gst').value       = q.gstPct ?? 18;
+  document.getElementById('i-remarks').value   = q.remarks || '';
+  document.getElementById('i-terms').value     = q.terms || STORE.getSettings().defaultTerms || '';
+  document.getElementById('i-quot-id').value   = q.id;
+  document.getElementById('i-quot-ref').value  = q.quotationNumber;
+  clearItems();
+  (q.items || []).forEach(item => addItemRow(item));
+  if (!q.items || q.items.length === 0) addItemRow();
+  recalcTotals();
+}
+
+// ======================================================
+//  EXPORT
+// ======================================================
+function exportInvoices() {
+  const csv = ['Invoice #,Quot Ref,Customer,Project,Date,Amount,Status'].concat(
+    filteredData.map(i => `"${i.invoiceNumber}","${i.quotationNumber||''}","${i.customerName}","${i.projectName}","${UTILS.formatDate(i.invoiceDate)}","${i.grandTotal}","${i.status}"`)
+  ).join('\n');
+  UTILS.downloadCSV(csv, 'IWY_Invoices.csv');
+}
+
+// ======================================================
+//  INIT
+// ======================================================
+const params = new URLSearchParams(location.search);
+if (params.get('view'))      { showList(); viewInvoice(params.get('view')); }
+else if (params.get('new') === '1') { allCustomers = STORE.getCustomers(); showForm('new'); }
+else showList();
 </script>
 </body>
 </html>
