@@ -250,11 +250,11 @@
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">New Password <span style="color:var(--gray-400);font-weight:400">(optional)</span></label>
-                  <input type="password" class="form-control" id="s-adminPassword" placeholder="Leave blank to keep current" autocomplete="new-password">
+                  <input type="password" class="form-control" id="s-adminPassword" placeholder="Leave blank to keep current" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Confirm New Password</label>
-                  <input type="password" class="form-control" id="s-adminPasswordConfirm" placeholder="Repeat only if changing" autocomplete="new-password">
+                  <input type="password" class="form-control" id="s-adminPasswordConfirm" placeholder="Repeat only if changing" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')">
                 </div>
               </div>
               <p id="pw-status" style="font-size:13px;margin-top:8px;min-height:20px"></p>
@@ -595,6 +595,10 @@ function resetData() {
 }
 
 // ── Init ──────────────────────────────────────────────────────
+// Force-clear password fields immediately — browsers sometimes autofill
+// them before JS runs, which would cause a false "passwords don't match" error
+document.getElementById('s-adminPassword').value = '';
+document.getElementById('s-adminPasswordConfirm').value = '';
 loadSettings();
 </script>
 </body>
