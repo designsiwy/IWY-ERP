@@ -11,9 +11,15 @@
   <div id="nav-placeholder"></div>
   <main class="main-content">
     <div class="page-header">
-      <div>
-        <h1 class="page-title">Settings</h1>
-        <p class="page-subtitle">Configure your ERP system</p>
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="dashboard.html" class="btn btn-ghost" style="padding:8px 12px;display:flex;align-items:center;gap:6px;text-decoration:none">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          Dashboard
+        </a>
+        <div>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Configure your ERP system</p>
+        </div>
       </div>
       <button class="btn btn-primary" onclick="saveAllSettings()">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -24,35 +30,35 @@
     <div class="settings-layout">
       <!-- Settings Tabs -->
       <div class="settings-sidebar">
-        <button class="settings-tab active" onclick="showSection('company')">
+        <button class="settings-tab active" onclick="showSection('company', this)">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
           Company Info
         </button>
-        <button class="settings-tab" onclick="showSection('numbering')">
+        <button class="settings-tab" onclick="showSection('numbering', this)">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
           Numbering
         </button>
-        <button class="settings-tab" onclick="showSection('bank')">
+        <button class="settings-tab" onclick="showSection('bank', this)">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
           Bank Details
         </button>
-        <button class="settings-tab" onclick="showSection('terms')">
+        <button class="settings-tab" onclick="showSection('terms', this)">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           Terms & Footer
         </button>
-        <button class="settings-tab" onclick="showSection('gst')">
+        <button class="settings-tab" onclick="showSection('gst', this)">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
           Tax & Currency
         </button>
-        <button class="settings-tab" onclick="showSection('admin')">
+        <button class="settings-tab" onclick="showSection('admin', this)">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
           Admin Login
         </button>
-        <button class="settings-tab" onclick="showSection('integration')">
+        <button class="settings-tab" onclick="showSection('integration', this)">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           Integration
         </button>
-        <button class="settings-tab danger-tab" onclick="showSection('data')">
+        <button class="settings-tab danger-tab" onclick="showSection('data', this)">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           Data Management
         </button>
@@ -60,6 +66,7 @@
 
       <!-- Sections -->
       <div class="settings-content">
+
         <!-- Company Info -->
         <div class="settings-section active" id="section-company">
           <div class="card">
@@ -86,7 +93,7 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">Email</label>
-                  <input type="email" class="form-control" id="s-email" placeholder="info@iwydesigns.com">
+                  <input type="text" class="form-control" id="s-email" placeholder="info@iwydesigns.com">
                 </div>
               </div>
               <div class="form-row">
@@ -139,7 +146,8 @@
                 </div>
               </div>
               <div class="alert alert-info" style="margin-top:16px">
-                <strong>Note:</strong> Changing the counter will affect the next generated document number. Preview: <span id="qPreview">—</span> / <span id="iPreview">—</span>
+                <strong>Note:</strong> Changing the counter affects the next document number generated.
+                Preview: <span id="qPreview">—</span> / <span id="iPreview">—</span>
               </div>
             </div>
           </div>
@@ -227,7 +235,7 @@
             <div class="card-header"><h3 class="card-title">Admin Credentials</h3></div>
             <div class="card-body">
               <div class="alert alert-warning" style="margin-bottom:20px">
-                <strong>Security Note:</strong> Changing your password will log you out. Default credentials: admin / iwy@2024
+                <strong>Note:</strong> Leave the password fields blank to keep the current password unchanged.
               </div>
               <div class="form-row">
                 <div class="form-group">
@@ -241,14 +249,15 @@
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">New Password</label>
-                  <input type="password" class="form-control" id="s-adminPassword" placeholder="Leave blank to keep current">
+                  <label class="form-label">New Password <span style="color:var(--gray-400);font-weight:400">(optional)</span></label>
+                  <input type="password" class="form-control" id="s-adminPassword" placeholder="Leave blank to keep current" autocomplete="new-password">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Confirm Password</label>
-                  <input type="password" class="form-control" id="s-adminPasswordConfirm" placeholder="Repeat new password">
+                  <label class="form-label">Confirm New Password</label>
+                  <input type="password" class="form-control" id="s-adminPasswordConfirm" placeholder="Repeat only if changing" autocomplete="new-password">
                 </div>
               </div>
+              <p id="pw-status" style="font-size:13px;margin-top:8px;min-height:20px"></p>
             </div>
           </div>
         </div>
@@ -263,21 +272,24 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Google Apps Script Web App URL</label>
-                <input type="url" class="form-control" id="s-googleScriptUrl" placeholder="https://script.google.com/macros/s/...">
-                <small class="form-hint">Deploy your Google Apps Script as a Web App and paste the URL here</small>
+                <!-- type="text" intentionally — type="url" causes browsers to clear the value if it fails internal validation -->
+                <input type="text" class="form-control" id="s-googleScriptUrl"
+                  placeholder="https://script.google.com/macros/s/..." spellcheck="false" autocomplete="off">
+                <small class="form-hint">Paste the full Web App URL from your Apps Script deployment</small>
               </div>
-              <div style="margin-top:16px">
-                <button class="btn btn-secondary" onclick="testConnection()">Test Connection</button>
-                <span id="connStatus" style="margin-left:12px;font-size:13px"></span>
+              <div style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <button class="btn btn-secondary" onclick="saveUrlOnly()">Save URL</button>
+                <button class="btn btn-ghost" onclick="testConnection()">Test Connection</button>
+                <span id="connStatus" style="font-size:13px"></span>
               </div>
               <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--gray-200)">
-                <h4 style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:12px">Apps Script Setup Instructions</h4>
+                <h4 style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:12px">Quick Setup Steps</h4>
                 <ol style="font-size:13px;color:var(--gray-600);line-height:2;padding-left:20px">
-                  <li>Go to <strong>script.google.com</strong> and create a new project</li>
-                  <li>Paste the code from <code>apps-script/Code.gs</code></li>
-                  <li>Deploy → New Deployment → Web App</li>
-                  <li>Set Execute as: <strong>Me</strong>, Who has access: <strong>Anyone</strong></li>
-                  <li>Copy the Web App URL and paste above</li>
+                  <li>Go to <strong>script.google.com</strong> → New project</li>
+                  <li>Paste Code.gs, API.gs, Sheets.gs from the <code>apps-script/</code> folder</li>
+                  <li>Run the <code>setup()</code> function once to create the spreadsheet</li>
+                  <li>Deploy → New Deployment → Web app → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong></li>
+                  <li>Copy the Web App URL, paste above, click <strong>Save URL</strong></li>
                 </ol>
               </div>
             </div>
@@ -310,7 +322,7 @@
                 <div class="data-action-card danger">
                   <div>
                     <h4 style="color:#991b1b">Reset All Data</h4>
-                    <p style="color:#7f1d1d">⚠️ This will permanently delete ALL customers, quotations, invoices and reset settings to defaults.</p>
+                    <p style="color:#7f1d1d">⚠️ This permanently deletes ALL customers, quotations, invoices and resets settings to defaults.</p>
                   </div>
                   <button class="btn btn-danger" onclick="resetData()">Reset Everything</button>
                 </div>
@@ -318,12 +330,11 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
+
+      </div><!-- /settings-content -->
+    </div><!-- /settings-layout -->
   </main>
 </div>
-
-<div class="toast-container" id="toastContainer"></div>
 
 <style>
 .settings-layout { display:flex; gap:24px; align-items:flex-start; }
@@ -364,93 +375,169 @@ AUTH.requireLogin();
 document.getElementById('nav-placeholder').innerHTML = buildNav('settings');
 initMobileMenu();
 
-function showSection(id) {
+// ── Tab switching ─────────────────────────────────────────────
+function showSection(id, btn) {
   document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('section-' + id).classList.add('active');
-  event.currentTarget.classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
+// ── Load all settings into form fields ───────────────────────
 function loadSettings() {
   const s = STORE.getSettings();
-  const fields = ['companyName','tagline','address','phone','email','website','gst','authorizedSignatory',
-    'quotationPrefix','invoicePrefix','quotationCounter','invoiceCounter','defaultValidity',
+  const textFields = [
+    'companyName','tagline','address','phone','email','website','gst','authorizedSignatory',
+    'quotationPrefix','invoicePrefix','defaultValidity',
     'bankName','accountHolder','accountNo','ifsc',
     'defaultTerms','defaultPaymentTerms','footerNote',
-    'defaultGST','currency',
-    'adminName','adminUsername',
-    'googleScriptUrl'];
-  fields.forEach(f => {
+    'defaultGST','adminName','adminUsername','googleScriptUrl'
+  ];
+  textFields.forEach(f => {
     const el = document.getElementById('s-' + f);
-    if (el) el.value = s[f] || '';
+    if (el) el.value = (s[f] !== undefined && s[f] !== null) ? s[f] : '';
   });
+
+  // counters
+  const qcEl = document.getElementById('s-quotationCounter');
+  const icEl = document.getElementById('s-invoiceCounter');
+  if (qcEl) qcEl.value = s.quotationCounter || 0;
+  if (icEl) icEl.value = s.invoiceCounter || 0;
+
+  // select
+  const curEl = document.getElementById('s-currency');
+  if (curEl) curEl.value = s.currency || '₹';
+
   updatePreviews();
 }
 
+// ── Live number preview ───────────────────────────────────────
 function updatePreviews() {
-  const prefix = document.getElementById('s-quotationPrefix').value || 'IWY-Q-';
-  const counter = parseInt(document.getElementById('s-quotationCounter').value) || 1;
-  document.getElementById('qPreview').textContent = prefix + String(counter).padStart(6, '0');
+  const qPfx = document.getElementById('s-quotationPrefix').value || 'IWY-Q-';
+  const qCtr = parseInt(document.getElementById('s-quotationCounter').value) || 1;
+  document.getElementById('qPreview').textContent = qPfx + String(qCtr).padStart(6, '0');
 
-  const iPrefix = document.getElementById('s-invoicePrefix').value || 'IWY-INV-';
-  const iCounter = parseInt(document.getElementById('s-invoiceCounter').value) || 1;
-  document.getElementById('iPreview').textContent = iPrefix + String(iCounter).padStart(6, '0');
+  const iPfx = document.getElementById('s-invoicePrefix').value || 'IWY-INV-';
+  const iCtr = parseInt(document.getElementById('s-invoiceCounter').value) || 1;
+  document.getElementById('iPreview').textContent = iPfx + String(iCtr).padStart(6, '0');
 }
-
 ['s-quotationPrefix','s-quotationCounter','s-invoicePrefix','s-invoiceCounter'].forEach(id => {
-  document.getElementById(id)?.addEventListener('input', updatePreviews);
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updatePreviews);
 });
 
-function saveAllSettings() {
+// ── Password live feedback ────────────────────────────────────
+['s-adminPassword','s-adminPasswordConfirm'].forEach(id => {
+  document.getElementById(id).addEventListener('input', checkPasswordMatch);
+});
+function checkPasswordMatch() {
   const pw1 = document.getElementById('s-adminPassword').value;
   const pw2 = document.getElementById('s-adminPasswordConfirm').value;
-  if (pw1 && pw1 !== pw2) {
-    UTILS.showToast('Passwords do not match', 'error');
-    return;
+  const status = document.getElementById('pw-status');
+  if (!pw1 && !pw2) { status.textContent = ''; return; }
+  if (!pw2) { status.textContent = ''; return; }
+  if (pw1 === pw2) {
+    status.textContent = '✅ Passwords match — will be updated on Save';
+    status.style.color = '#065f46';
+  } else {
+    status.textContent = '❌ Passwords do not match';
+    status.style.color = '#991b1b';
+  }
+}
+
+// ── Save ALL settings ─────────────────────────────────────────
+function saveAllSettings() {
+  // Password check — only validate if user typed something
+  const pw1 = document.getElementById('s-adminPassword').value;
+  const pw2 = document.getElementById('s-adminPasswordConfirm').value;
+
+  if (pw1 || pw2) {
+    // User is trying to change password
+    if (pw1 !== pw2) {
+      UTILS.showToast('Passwords do not match — please fix before saving', 'error');
+      showSection('admin', document.querySelector('.settings-tab:nth-child(6)'));
+      return;
+    }
+    if (pw1.length < 4) {
+      UTILS.showToast('Password must be at least 4 characters', 'error');
+      return;
+    }
   }
 
   const current = STORE.getSettings();
   const updates = {};
-  const fields = ['companyName','tagline','address','phone','email','website','gst','authorizedSignatory',
+
+  // Collect all text/number/select fields
+  const allFields = [
+    'companyName','tagline','address','phone','email','website','gst','authorizedSignatory',
     'quotationPrefix','invoicePrefix','defaultValidity',
     'bankName','accountHolder','accountNo','ifsc',
     'defaultTerms','defaultPaymentTerms','footerNote',
-    'defaultGST','currency','adminName','adminUsername','googleScriptUrl'];
-
-  fields.forEach(f => {
+    'defaultGST','currency','adminName','adminUsername','googleScriptUrl'
+  ];
+  allFields.forEach(f => {
     const el = document.getElementById('s-' + f);
-    if (el) updates[f] = el.type === 'number' ? parseFloat(el.value) || 0 : el.value;
+    if (!el) return;
+    if (el.type === 'number') {
+      updates[f] = parseFloat(el.value) || 0;
+    } else {
+      // Use .value directly — all fields are type="text" now, no browser URL sanitisation
+      updates[f] = el.value.trim !== undefined ? el.value : '';
+    }
   });
 
-  // Counter — only update if changed
+  // Counters
   const qc = parseInt(document.getElementById('s-quotationCounter').value);
   const ic = parseInt(document.getElementById('s-invoiceCounter').value);
   if (!isNaN(qc)) updates.quotationCounter = qc;
   if (!isNaN(ic)) updates.invoiceCounter = ic;
 
-  if (pw1) updates.adminPassword = pw1;
+  // Password — only update when provided and matching
+  if (pw1 && pw1 === pw2) {
+    updates.adminPassword = pw1;
+  }
 
   STORE.saveSettings({ ...current, ...updates });
+
+  // Clear password fields after save
   document.getElementById('s-adminPassword').value = '';
   document.getElementById('s-adminPasswordConfirm').value = '';
-  UTILS.showToast('Settings saved successfully', 'success');
+  document.getElementById('pw-status').textContent = '';
+
+  UTILS.showToast('Settings saved successfully ✓', 'success');
 }
 
+// ── Save GAS URL only (quick save button in Integration tab) ──
+function saveUrlOnly() {
+  const url = document.getElementById('s-googleScriptUrl').value.trim();
+  const current = STORE.getSettings();
+  STORE.saveSettings({ ...current, googleScriptUrl: url });
+  UTILS.showToast(url ? 'Google Script URL saved ✓' : 'URL cleared', 'success');
+}
+
+// ── Test GAS connection ───────────────────────────────────────
 async function testConnection() {
   const url = document.getElementById('s-googleScriptUrl').value.trim();
   const status = document.getElementById('connStatus');
-  if (!url) { status.textContent = '⚠️ No URL entered'; status.style.color = '#92400e'; return; }
-  status.textContent = 'Testing...'; status.style.color = 'var(--gray-500)';
+  if (!url) {
+    status.textContent = '⚠️ No URL entered';
+    status.style.color = '#92400e';
+    return;
+  }
+  status.textContent = 'Testing...';
+  status.style.color = 'var(--gray-500)';
   try {
-    const res = await fetch(url + '?action=ping', { mode: 'no-cors' });
-    status.textContent = '✅ Connection successful';
+    // no-cors means we can't read the response body, but no error = reachable
+    await fetch(url + '?action=ping', { mode: 'no-cors' });
+    status.textContent = '✅ URL is reachable';
     status.style.color = '#065f46';
   } catch (e) {
-    status.textContent = '❌ Connection failed: ' + e.message;
+    status.textContent = '❌ Could not reach URL — check the address';
     status.style.color = '#991b1b';
   }
 }
 
+// ── Export / Import / Reset ───────────────────────────────────
 function exportData() {
   const data = {
     exportDate: new Date().toISOString(),
@@ -479,7 +566,7 @@ function importData(input) {
         UTILS.showToast('Invalid backup file', 'error');
         return;
       }
-      if (!confirm(`Import data from ${file.name}?\n\nThis will MERGE with existing data. Continue?`)) return;
+      if (!confirm('Import data from ' + file.name + '?\n\nThis will MERGE with existing data. Continue?')) return;
       if (data.customers) data.customers.forEach(c => STORE.saveCustomer(c));
       if (data.quotations) data.quotations.forEach(q => {
         const list = STORE.getAllQuotations();
@@ -499,14 +586,15 @@ function importData(input) {
 }
 
 function resetData() {
-  if (!confirm('⚠️ DANGER: This will permanently delete ALL data including customers, quotations, and invoices.\n\nType "RESET" to confirm.')) return;
-  const confirm2 = prompt('Type RESET to confirm:');
-  if (confirm2 !== 'RESET') { UTILS.showToast('Reset cancelled', 'info'); return; }
+  if (!confirm('⚠️ DANGER: This will permanently delete ALL data.\n\nAre you sure?')) return;
+  const typed = prompt('Type RESET to confirm:');
+  if (typed !== 'RESET') { UTILS.showToast('Reset cancelled', 'info'); return; }
   ['iwy_customers','iwy_quotations','iwy_invoices','iwy_settings','iwy_activity'].forEach(k => localStorage.removeItem(k));
   UTILS.showToast('All data has been reset', 'success');
-  setTimeout(() => { loadSettings(); }, 500);
+  setTimeout(loadSettings, 300);
 }
 
+// ── Init ──────────────────────────────────────────────────────
 loadSettings();
 </script>
 </body>
